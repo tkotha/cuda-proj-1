@@ -119,7 +119,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			// __syncthreads();
 			// d_histogram[h_pos].d_cnt ++;	
 			// __syncthreads();
-			atomicAdd(&d_histogram[h_pos].d_cnt,1);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
 }
 
