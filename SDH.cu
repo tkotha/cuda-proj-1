@@ -164,7 +164,7 @@ void output_histogram(bucket* histogram){
 		total_cnt += histogram[i].d_cnt;
 	  	/* we also want to make sure the total distance count is correct */
 		if(i == num_buckets - 1)	
-			printf("\n");
+			printf("\n T:%lld \n", total_cnt);
 		else printf("| ");
 	}
 }
