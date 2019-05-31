@@ -187,29 +187,31 @@ int main(int argc, char **argv)
 	output_histogram(histogram);
 	
 
-	//gpu code
-	// h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	//gpu code--------------------------------------------------------------------------------
+	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 
-	// //copy the atomlist over from host to device
-	// cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
-	// cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
+	//copy the atomlist over from host to device
+	cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
+	cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
 
-	// //allocate the histogram data on the device
-	// cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
+	//allocate the histogram data on the device
+	cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
 
-	// //start the timer
-	// gettimeofday(&startTime, &Idunno);
+	//start the timer
+	gettimeofday(&startTime, &Idunno);
 
-	// //run the kernel
+	//run the kernel
 
-	// //copy the histogram results back from gpu over to cpu
-	// cudaMemcpy()
+	//copy the histogram results back from gpu over to cpu
+	cudaMemcpy()
 
-	// //check total running time
-	// report_running_time_GPU();
+	//check total running time
+	report_running_time_GPU();
 
-	// //print out the resulting histogram from the GPU
-	// output_histogram(h_gpu_histogram);
+	//print out the resulting histogram from the GPU
+	output_histogram(h_gpu_histogram);
+
+	//difference calculation--------------------------------------------------------------------------------
 
 	return 0;
 }
