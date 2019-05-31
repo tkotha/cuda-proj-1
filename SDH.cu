@@ -118,12 +118,12 @@ __global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, do
 		// p2 = atom_list[j].z_pos;
 		// t = p1 - p2;
 		// dist += t;
-		x1 = atom_list[id].x_pos
-		x2 = atom_list[j].x_pos
-		y1 = atom_list[id].y_pos
-		y2 = atom_list[j].y_pos
-		z1 = atom_list[id].z_pos
-		z2 = atom_list[j].z_pos
+		x1 = atom_list[id].x_pos;
+		x2 = atom_list[j].x_pos;
+		y1 = atom_list[id].y_pos;
+		y2 = atom_list[j].y_pos;
+		z1 = atom_list[id].z_pos;
+		z2 = atom_list[j].z_pos;
 
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));	//does this require a float parameter, or should double be fine?
 		h_pos = (int) (dist / res);
