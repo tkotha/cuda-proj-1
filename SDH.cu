@@ -115,7 +115,7 @@ __global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, do
 
 		dist = sqrt(dist);	//does this require a float parameter, or should double be fine?
 		h_pos = (int) (dist / res);
-		histogram[h_pos].d_cnt = 6;
+		histogram[h_pos].d_cnt++;
 	}
 }
 
