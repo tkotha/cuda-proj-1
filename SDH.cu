@@ -85,7 +85,7 @@ int PDH_baseline() {
 	it just occurred to me that this makes no effort to protect against conflicting writes in the histogram
 	... oh well, we'll see what happens
 */
-__global__ void PDH_GPU(bucket * histogram, atom * atom_list, double res){
+__global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, double res){
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
 	double dist;
@@ -93,7 +93,7 @@ __global__ void PDH_GPU(bucket * histogram, atom * atom_list, double res){
 	double p1;
 	double p2;
 	double t;
-	for(j = 0; j < PDH_acnt; j++)
+	for(j = 0; j < acnt; j++)
 	{
 		dist = 0.0;
 		//get the x
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
 	cudaMalloc((void**) &d_atom_list, atomsize);
 
 	//copy host atomlist over to the GPU
-	cudaMemcpy(d_atom_list, atomlist, atomsize, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_atom_list, atom_list, atomsize, cudaMemcpyHostToDevice);
 
 	//start the timer
 	gettimeofday(&startTime, &Idunno);
@@ -238,10 +238,10 @@ int main(int argc, char **argv)
 
 
 	//calculate the differences between the two and store it
-	int i;
-	for(i = 0; i < num_buckets; i ++)
+	int hi;
+	for(hi = 0; hi < num_buckets; hi ++)
 	{
-		h_diff_histogram[i].d_cnt = histogram[i].d_cnt - h_gpu_histogram[i].d_cnt;
+		h_diff_histogram[hi].d_cnt = histogram[hi].d_cnt - h_gpu_histogram[hi].d_cnt;
 	}
 
 
