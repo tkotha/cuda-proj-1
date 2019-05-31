@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 
 	//allocate any needed host side gpu vars here
 	h_gpu_histogram = (bucket *)malloc(bucketsize);
-	h_diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	h_diff_histogram = (bucket *)malloc(bucketsize);
 	
 	srand(1);
 	/* generate data following a uniform distribution */
