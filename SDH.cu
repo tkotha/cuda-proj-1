@@ -90,6 +90,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 	double y2;
 	double z1;
 	double z2;
+	//let's just do sometihng simple, like set all hist values to 5
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
@@ -101,7 +102,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			z2 = d_atom_list[j].z_pos;
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
-			d_histogram[h_pos].d_cnt++;
+			d_histogram[h_pos].d_cnt = 5;
 		}
 }
 
@@ -201,9 +202,9 @@ int main(int argc, char **argv)
 	gettimeofday(&startTime, &Idunno);
 
 	//run the kernel
-
+	PDH_kernel<<<PDH_acnt/256.0, 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	//copy the histogram results back from gpu over to cpu
-	cudaMemcpy()
+	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
 
 	//check total running time
 	report_running_time_GPU();
