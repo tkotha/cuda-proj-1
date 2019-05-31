@@ -93,7 +93,7 @@ __global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, do
 	double p1;
 	double p2;
 	double t;
-	for(j = 0; j < acnt; j++)
+	for(j = id+1; j < acnt; j++)
 	{
 		dist = 0.0;
 		//get the x
