@@ -78,6 +78,9 @@ int PDH_baseline() {
 
 /*
 	SDH kernel - a really crappy one, but I just want to check that this thing actually works
+	//update, okay so this is starting to make sense... but there's still an issue
+	// ther are 2 last values of the histogram whose values are complete nonsense
+	//though everything should theoretically be 6, those values do not seem to be getting set at all
 */
 __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
 {
@@ -102,7 +105,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			z2 = d_atom_list[j].z_pos;
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
-			d_histogram[h_pos].d_cnt ++;
+			d_histogram[h_pos].d_cnt = 6;
 		}
 }
 
@@ -188,6 +191,7 @@ int main(int argc, char **argv)
 	output_histogram(histogram);
 	
 
+	cudaDeviceReset();
 	//gpu code--------------------------------------------------------------------------------
 	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 
