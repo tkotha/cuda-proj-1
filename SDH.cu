@@ -90,30 +90,42 @@ __global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, do
 	int j, h_pos;
 	double dist;
 
-	double p1;
-	double p2;
-	double t;
+	// double p1;
+	// double p2;
+	// double t;
+	double x1 ;
+	double x2 ;
+	double y1 ;
+	double y2 ;
+	double z1 ;
+	double z2 ;
 	if(id >= acnt) return;
 	for(j = id+1; j < acnt; j++)
 	{
-		dist = 0.0;
-		//get the x
-		p1 = atom_list[id].x_pos;
-		p2 = atom_list[j].x_pos;
-		t = p1 - p2;
-		dist += t;
-		//get the y
-		p1 = atom_list[id].y_pos;
-		p2 = atom_list[j].y_pos;
-		t = p1 - p2;
-		dist += t;
-		//get the z
-		p1 = atom_list[id].z_pos;
-		p2 = atom_list[j].z_pos;
-		t = p1 - p2;
-		dist += t;
+		// dist = 0.0;
+		// //get the x
+		// p1 = atom_list[id].x_pos;
+		// p2 = atom_list[j].x_pos;
+		// t = p1 - p2;
+		// dist += t;
+		// //get the y
+		// p1 = atom_list[id].y_pos;
+		// p2 = atom_list[j].y_pos;
+		// t = p1 - p2;
+		// dist += t;
+		// //get the z
+		// p1 = atom_list[id].z_pos;
+		// p2 = atom_list[j].z_pos;
+		// t = p1 - p2;
+		// dist += t;
+		x1 = atom_list[ind1].x_pos
+		x2 = atom_list[ind2].x_pos
+		y1 = atom_list[ind1].y_pos
+		y2 = atom_list[ind2].y_pos
+		z1 = atom_list[ind1].z_pos
+		z2 = atom_list[ind2].z_pos
 
-		dist = sqrt(dist);	//does this require a float parameter, or should double be fine?
+		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));	//does this require a float parameter, or should double be fine?
 		h_pos = (int) (dist / res);
 		histogram[h_pos].d_cnt++;
 	}
