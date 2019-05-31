@@ -115,7 +115,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
 			//d_histogram[h_pos].d_cnt ++;	//apparently this is not good enough, as undercounting or overcounting can occur
-			atomicAdd( &histogram[h_pos].d_cnt, 1);
+			atomicAdd( &d_histogram[h_pos].d_cnt, 1);
 		}
 }
 
