@@ -116,9 +116,9 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			z2 = d_atom_list[j].z_pos;
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
-			//__syncthreads();
+			__syncthreads();
 			d_histogram[h_pos].d_cnt ++;	
-			//__syncthreads();
+			__syncthreads();
 		}
 }
 
