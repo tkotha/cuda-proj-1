@@ -2,7 +2,7 @@ all:
 	nvcc SDH.cu -o SDH
 commit:
 	git add -A .
-	git commit -m "okay... we are restarting now... I have no idea what happened there"
+	git commit -m "2nd attempt, and this time we wont have any weird glitches"
 	git push origin
 pull:
 	git pull origin
