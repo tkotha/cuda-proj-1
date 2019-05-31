@@ -93,7 +93,7 @@ int PDH_baseline() {
 	//though everything should theoretically be 6, those values do not seem to be getting set at all
 */
 
-__global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, int acnt, double res)
+__global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
