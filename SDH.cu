@@ -184,8 +184,8 @@ int main(int argc, char **argv)
 	atom_list = (atom *)malloc(atomsize);
 
 	//allocate any needed host side gpu vars here
-	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
-	h_diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	h_gpu_histogram = (bucket *)calloc(sizeof(bucket)*num_buckets);
+	h_diff_histogram = (bucket *)calloc(sizeof(bucket)*num_buckets);
 	
 	srand(1);
 	/* generate data following a uniform distribution */
