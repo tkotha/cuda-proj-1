@@ -92,14 +92,7 @@ int PDH_baseline() {
 	// ther are 2 last values of the histogram whose values are complete nonsense
 	//though everything should theoretically be 6, those values do not seem to be getting set at all
 */
-__global__ void clearmem_kern(bucket* d_histogram, int num_buckets)
-{
-	int id = blockIdx.x*blockDim.x + threadIdx.x;
-	if(id < num_buckets)
-	{
-		d_histogram[id].d_cnt = 0;
-	}
-}
+
 __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
@@ -243,8 +236,6 @@ int main(int argc, char **argv)
 	//start the timer
 	gettimeofday(&startTime, &Idunno);
 
-	//clear the memory of histogram
-	//clearmem_kern<<<ceil(num_buckets/64.0), 64>>>(d_gpu_histogram, num_buckets);
 	//run the kernel
 	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	cuda_err(cudaGetLastError(), "Checking PDH_kernel");

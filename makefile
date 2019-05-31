@@ -2,7 +2,7 @@ all:
 	nvcc SDH.cu -o SDH
 commit:
 	git add -A .
-	git commit -m "2nd attempt, and this time we wont have any weird glitches"
+	git commit -m "that's all for day 1. at the moment i have something that... appears to work. however the differences seem too large for my taste, so I'll have to ask the TA what might be going on"
 	git push origin
 pull:
 	git pull origin
