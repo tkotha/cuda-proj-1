@@ -237,8 +237,8 @@ int main(int argc, char **argv)
 	gettimeofday(&startTime, &Idunno);
 
 	//run the kernel
-	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	cuda_err(cudaGetLastError(), "Checking PDH_kernel");
+	//PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
+	//cuda_err(cudaGetLastError(), "Checking PDH_kernel");
 
 	//copy the histogram results back from gpu over to cpu
 	cuda_err(cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost),
