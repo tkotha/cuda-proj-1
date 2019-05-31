@@ -59,6 +59,15 @@ double p2p_distance(int ind1, int ind2) {
 	return sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 }
 
+//get cuda error
+void cuda_err(cudaError_t e, char in[])
+{
+	if (e != cudaSuccess){
+		printf("CUDA Error: %s, %s \n", in, cudaGetErrorString(e));
+		exit(EXIT_FAILURE);
+	}
+}
+
 
 /* 
 	brute-force SDH solution in a single CPU thread 
@@ -221,27 +230,32 @@ int main(int argc, char **argv)
 	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 
 	//copy the atomlist over from host to device
-	cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
-	cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
+	cuda_err(cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt), "malloc atom_list");
+	cuda_err(cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice),
+						"memcpy atom_list to gpu");
 
 	//allocate the histogram data on the device
-	cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
+	cuda_err(cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets),
+						"malloc d_gpu_histogram");
+	cuda_err(cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(bucket)*num_buckets,cudaMemcpyHostToDevice),
+						"memcpy gpu_histogram to gpu");
 
 	//start the timer
 	gettimeofday(&startTime, &Idunno);
 
 	//clear the memory of histogram
-	clearmem_kern<<<ceil(num_buckets/64.0), 64>>>(d_gpu_histogram, num_buckets);
+	//clearmem_kern<<<ceil(num_buckets/64.0), 64>>>(d_gpu_histogram, num_buckets);
 	//run the kernel
 	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
+	cuda_err(cudaGetLastError(), "Checking PDH_kernel");
+
 	//copy the histogram results back from gpu over to cpu
-	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
+	cuda_err(cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost),
+						"copy back histogram to cpu");
 
 	//check total running time
 	report_running_time_GPU();
 
-	cudaFree(d_gpu_histogram);
-	cudaFree(d_atom_list);
 	//print out the resulting histogram from the GPU
 	output_histogram(h_gpu_histogram);
 
@@ -254,8 +268,17 @@ int main(int argc, char **argv)
 		diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
 	}
 
+
+
 	output_histogram(diff_histogram);
 	//output_diff_histogram_percent();
+
+	cuda_err(cudaFree(d_gpu_histogram), "free histogram");
+	cuda_err(cudaFree(d_atom_list), "free atom list");
+	free(histogram);
+	free(atom_list);
+	free(h_gpu_histogram);
+	free(diff_histogram); 
 
 	return 0;
 }
