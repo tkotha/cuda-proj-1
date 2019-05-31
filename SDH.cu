@@ -177,14 +177,17 @@ int main(int argc, char **argv)
 	PDH_res	 = atof(argv[2]);
 //printf("args are %d and %f\n", PDH_acnt, PDH_res);
 
-	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
-	histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	int atomsize = sizeof(atom)*PDH_acnt;
+	int bucketsize = sizeof(bucket)*num_buckets;
 
-	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
+	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
+	histogram = (bucket *)malloc(bucketsize);
+
+	atom_list = (atom *)malloc(atomsize);
 
 	//allocate any needed host side gpu vars here
-	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
-	h_diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	h_gpu_histogram = (bucket *)malloc(bucketsize);
+	h_diff_histogram = (bucket *)malloc(bucketsize);
 	
 	srand(1);
 	/* generate data following a uniform distribution */
@@ -208,8 +211,7 @@ int main(int argc, char **argv)
 
 	//now for the gpu part
 	//allocate relevant information
-	int atomsize = sizeof(atom)*PDH_acnt;
-	int bucketsize = sizeof(bucket)*num_buckets;
+	
 	cudaMalloc((void**) &d_gpu_histogram, bucketsize);
 	cudaMalloc((void**) &d_atom_list, atomsize);
 
