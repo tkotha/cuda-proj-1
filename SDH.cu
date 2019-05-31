@@ -30,6 +30,7 @@ typedef struct hist_entry{
 bucket * histogram;		/* list of all buckets in the histogram   */
 bucket * h_gpu_histogram;
 bucket * d_gpu_histogram;
+bucket * diff_histogram;
 
 long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
@@ -165,6 +166,21 @@ void output_histogram(bucket* histogram){
 }
 
 
+void output_diff_histogram(){
+	int i; 
+	long long total_cnt = 0;
+	for(i=0; i< num_buckets; i++) {
+		if(i%5 == 0) /* we print 5 buckets in a row */
+			printf("\n%02d: ", i);
+		printf("%15lld ", histogram[i].d_cnt);
+		total_cnt += histogram[i].d_cnt;
+	  	/* we also want to make sure the total distance count is correct */
+		if(i == num_buckets - 1)	
+			printf("\n");
+		else printf("| ");
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int i;
@@ -229,6 +245,15 @@ int main(int argc, char **argv)
 	output_histogram(h_gpu_histogram);
 
 	//difference calculation--------------------------------------------------------------------------------
+
+	diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	int bi;
+	for(bi = 0; bi < num_buckets; bi++)
+	{
+		diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
+	}
+
+	output_histogram(diff_histogram);
 
 	return 0;
 }
