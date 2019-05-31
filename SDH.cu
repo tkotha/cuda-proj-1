@@ -112,7 +112,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 	double z1;
 	double z2;
 	//let's just do sometihng simple, like set all hist values to 5
-	if(id < acnt) 
+	//if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
 			x1 = d_atom_list[id].x_pos;
