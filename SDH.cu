@@ -176,8 +176,9 @@ void output_histogram(bucket * hist, int useTValue){
 	  	/* we also want to make sure the total distance count is correct */
 		if(i == num_buckets - 1)	
 		{
-			if(useTValue)
-				printf("\n T:%lld \n", total_cnt);
+			
+			printf("\n T:%lld \n", total_cnt);
+
 		}
 		else printf("| ");
 	}
