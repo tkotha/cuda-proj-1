@@ -209,6 +209,8 @@ int main(int argc, char **argv)
 	//check total running time
 	report_running_time_GPU();
 
+	cudaFree(d_gpu_histogram);
+	cudaFree(d_atom_list);
 	//print out the resulting histogram from the GPU
 	output_histogram(h_gpu_histogram);
 
