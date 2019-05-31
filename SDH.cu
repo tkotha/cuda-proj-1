@@ -181,13 +181,13 @@ int main(int argc, char **argv)
 	int bucketsize = sizeof(bucket)*num_buckets;
 
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
-	histogram = (bucket *)malloc(bucketsize);
+	histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 
-	atom_list = (atom *)malloc(atomsize);
+	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
 
 	//allocate any needed host side gpu vars here
-	h_gpu_histogram = (bucket *)malloc(bucketsize);
-	h_diff_histogram = (bucket *)malloc(bucketsize);
+	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	h_diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 	
 	srand(1);
 	/* generate data following a uniform distribution */
