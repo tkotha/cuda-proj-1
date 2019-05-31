@@ -79,7 +79,7 @@ int PDH_baseline() {
 /*
 	SDH kernel - a really crappy one, but I just want to check that this thing actually works
 */
-__global__ PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
+__global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
@@ -93,14 +93,14 @@ __global__ PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, do
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
-			x1 = d_atom_list[ind1].x_pos;
-			x2 = d_atom_list[ind2].x_pos;
-			y1 = d_atom_list[ind1].y_pos;
-			y2 = d_atom_list[ind2].y_pos;
-			z1 = d_atom_list[ind1].z_pos;
-			z2 = d_atom_list[ind2].z_pos;
+			x1 = d_atom_list[id].x_pos;
+			x2 = d_atom_list[j].x_pos;
+			y1 = d_atom_list[id].y_pos;
+			y2 = d_atom_list[j].y_pos;
+			z1 = d_atom_list[id].z_pos;
+			z2 = d_atom_list[j].z_pos;
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
-			h_pos = (int) (dist / PDH_res);
+			h_pos = (int) (dist / res);
 			d_histogram[h_pos].d_cnt++;
 		}
 }
