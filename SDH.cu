@@ -85,7 +85,7 @@ int PDH_baseline() {
 	it just occurred to me that this makes no effort to protect against conflicting writes in the histogram
 	... oh well, we'll see what happens
 */
-__global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, double res){
+__global__ void PDH_GPU(bucket * d_histogram, atom * d_atom_list, long long acnt, double res){
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
 	double dist;
@@ -100,12 +100,12 @@ __global__ void PDH_GPU(bucket * histogram, atom * atom_list, long long acnt, do
 	for(j = id+1; j < acnt; j++)
 	{
 		
-		x1 = atom_list[id].x_pos;
-		x2 = atom_list[j].x_pos;
-		y1 = atom_list[id].y_pos;
-		y2 = atom_list[j].y_pos;
-		z1 = atom_list[id].z_pos;
-		z2 = atom_list[j].z_pos;
+		x1 = d_atom_list[id].x_pos;
+		x2 = d_atom_list[j].x_pos;
+		y1 = d_atom_list[id].y_pos;
+		y2 = d_atom_list[j].y_pos;
+		z1 = d_atom_list[id].z_pos;
+		z2 = d_atom_list[j].z_pos;
 
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));	//does this require a float parameter, or should double be fine?
 		h_pos = (int) (dist / res);
