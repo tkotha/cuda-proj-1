@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-
+#include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 
@@ -32,6 +32,13 @@ long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
 double   PDH_res;		/* value of w                             */
 atom * atom_list;		/* list of all data points                */
+
+//add vars for gpu
+bucket * d_gpu_histogram;
+atom * d_atom_list;
+
+//add another histogram to get the differences
+bucket * h_diff_histogram;
 
 /* These are for an old way of tracking time */
 struct timezone Idunno;	
@@ -88,17 +95,30 @@ double report_running_time() {
 }
 
 
+double report_running_time_GPU() {
+	long sec_diff, usec_diff;
+	gettimeofday(&endTime, &Idunno);
+	sec_diff = endTime.tv_sec - startTime.tv_sec;
+	usec_diff= endTime.tv_usec-startTime.tv_usec;
+	if(usec_diff < 0) {
+		sec_diff --;
+		usec_diff += 1000000;
+	}
+	printf("Running time for GPU version: %ld.%06ld\n", sec_diff, usec_diff);
+	return (double)(sec_diff*1.0 + usec_diff/1000000.0);
+}
+
 /* 
 	print the counts in all buckets of the histogram 
 */
-void output_histogram(){
+void output_histogram(bucket * hist){
 	int i; 
 	long long total_cnt = 0;
 	for(i=0; i< num_buckets; i++) {
 		if(i%5 == 0) /* we print 5 buckets in a row */
 			printf("\n%02d: ", i);
-		printf("%15lld ", histogram[i].d_cnt);
-		total_cnt += histogram[i].d_cnt;
+		printf("%15lld ", hist[i].d_cnt);
+		total_cnt += hist[i].d_cnt;
 	  	/* we also want to make sure the total distance count is correct */
 		if(i == num_buckets - 1)	
 			printf("\n T:%lld \n", total_cnt);
@@ -138,7 +158,7 @@ int main(int argc, char **argv)
 	report_running_time();
 	
 	/* print out the histogram */
-	output_histogram();
+	output_histogram(histogram);
 	
 	return 0;
 }
