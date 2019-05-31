@@ -222,7 +222,7 @@ int main(int argc, char **argv)
 	//call the kernel here
 	//i have no idea if this is optimal, I'm just throwing in a number
 	//the threads are split up based on the # of atoms, as each atom needs to process its collision pairs and update the histogram
-	PDH_GPU<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt,PDH_res);
+	//PDH_GPU<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt,PDH_res);
 
 	//copy the results from the GPU back
 	//cudaMemcpy(h_gpu_histogram, d_gpu_histogram, bucketsize, cudaMemcpyDeviceToHost);
