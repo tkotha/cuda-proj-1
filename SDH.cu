@@ -181,7 +181,7 @@ int main(int argc, char **argv)
 	int bucketsize = sizeof(bucket)*num_buckets;
 
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
-	histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	histogram = (bucket *)malloc(bucketsize);
 
 	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
 
