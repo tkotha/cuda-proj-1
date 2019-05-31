@@ -172,7 +172,7 @@ void output_diff_histogram_percent(){
 	for(i=0; i< num_buckets; i++) {
 		if(i%5 == 0) /* we print 5 buckets in a row */
 			printf("\n%02d: ", i);
-		printf("%1f ", diff_histogram[i].d_cnt/ (double)histogram[i].d_cnt);
+		printf("%1f ", h_gpu_histogram[i].d_cnt/ (double)histogram[i].d_cnt);
 	  	/* we also want to make sure the total distance count is correct */
 		if(i == num_buckets - 1)	
 			printf("\n");
