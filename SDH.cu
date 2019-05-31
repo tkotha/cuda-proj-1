@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-
+#include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 
@@ -28,10 +28,15 @@ typedef struct hist_entry{
 
 
 bucket * histogram;		/* list of all buckets in the histogram   */
+bucket * h_gpu_histogram;
+bucket * d_gpu_histogram;
+
 long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
 double   PDH_res;		/* value of w                             */
+
 atom * atom_list;		/* list of all data points                */
+atom * d_atom_list;
 
 /* These are for an old way of tracking time */
 struct timezone Idunno;	
@@ -71,6 +76,35 @@ int PDH_baseline() {
 	return 0;
 }
 
+/*
+	SDH kernel - a really crappy one, but I just want to check that this thing actually works
+*/
+__global__ PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
+{
+	int id = blockIdx.x*blockDim.x + threadIdx.x;
+	int j, h_pos;
+	double dist;
+	double x1;
+	double x2;
+	double y1;
+	double y2;
+	double z1;
+	double z2;
+	if(id < acnt) 
+		for(j = id+1; j < acnt; j++)
+		{
+			x1 = d_atom_list[ind1].x_pos;
+			x2 = d_atom_list[ind2].x_pos;
+			y1 = d_atom_list[ind1].y_pos;
+			y2 = d_atom_list[ind2].y_pos;
+			z1 = d_atom_list[ind1].z_pos;
+			z2 = d_atom_list[ind2].z_pos;
+			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			h_pos = (int) (dist / PDH_res);
+			d_histogram[h_pos].d_cnt++;
+		}
+}
+
 /* 
 	set a checkpoint and show the (natural) running time in seconds 
 */
@@ -87,11 +121,23 @@ double report_running_time() {
 	return (double)(sec_diff*1.0 + usec_diff/1000000.0);
 }
 
+double report_running_time_GPU() {
+	long sec_diff, usec_diff;
+	gettimeofday(&endTime, &Idunno);
+	sec_diff = endTime.tv_sec - startTime.tv_sec;
+	usec_diff= endTime.tv_usec-startTime.tv_usec;
+	if(usec_diff < 0) {
+		sec_diff --;
+		usec_diff += 1000000;
+	}
+	printf("Running time for GPU version: %ld.%06ld\n", sec_diff, usec_diff);
+	return (double)(sec_diff*1.0 + usec_diff/1000000.0);
+}
 
 /* 
 	print the counts in all buckets of the histogram 
 */
-void output_histogram(){
+void output_histogram(bucket* histogram){
 	int i; 
 	long long total_cnt = 0;
 	for(i=0; i< num_buckets; i++) {
@@ -116,7 +162,7 @@ int main(int argc, char **argv)
 //printf("args are %d and %f\n", PDH_acnt, PDH_res);
 
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
-	histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	histogram =       (bucket *)malloc(sizeof(bucket)*num_buckets);
 
 	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
 
@@ -138,8 +184,33 @@ int main(int argc, char **argv)
 	report_running_time();
 	
 	/* print out the histogram */
-	output_histogram();
+	output_histogram(histogram);
 	
+
+	//gpu code
+	// h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+
+	// //copy the atomlist over from host to device
+	// cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
+	// cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
+
+	// //allocate the histogram data on the device
+	// cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
+
+	// //start the timer
+	// gettimeofday(&startTime, &Idunno);
+
+	// //run the kernel
+
+	// //copy the histogram results back from gpu over to cpu
+	// cudaMemcpy()
+
+	// //check total running time
+	// report_running_time_GPU();
+
+	// //print out the resulting histogram from the GPU
+	// output_histogram(h_gpu_histogram);
+
 	return 0;
 }
 
