@@ -225,7 +225,7 @@ int main(int argc, char **argv)
 	PDH_GPU<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt,PDH_res);
 
 	//copy the results from the GPU back
-	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, bucketsize, cudaMemcpyDeviceToHost);
+	//cudaMemcpy(h_gpu_histogram, d_gpu_histogram, bucketsize, cudaMemcpyDeviceToHost);
 	//check the total running time
 	report_running_time_GPU();
 
