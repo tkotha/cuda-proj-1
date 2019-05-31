@@ -165,7 +165,7 @@ double report_running_time_GPU() {
 /* 
 	print the counts in all buckets of the histogram 
 */
-void output_histogram(bucket * hist){
+void output_histogram(bucket * hist, int useTValue){
 	int i; 
 	long long total_cnt = 0;
 	for(i=0; i< num_buckets; i++) {
@@ -175,7 +175,10 @@ void output_histogram(bucket * hist){
 		total_cnt += hist[i].d_cnt;
 	  	/* we also want to make sure the total distance count is correct */
 		if(i == num_buckets - 1)	
-			printf("\n T:%lld \n", total_cnt);
+		{
+			if(useTValue)
+				printf("\n T:%lld \n", total_cnt);
+		}
 		else printf("| ");
 	}
 }
@@ -218,7 +221,7 @@ int main(int argc, char **argv)
 	report_running_time();
 	
 	/* print out the histogram */
-	output_histogram(histogram);
+	output_histogram(histogram, 1);
 
 
 	//now for the gpu part
@@ -248,7 +251,7 @@ int main(int argc, char **argv)
 	cudaFree(d_atom_list);
 
 	//print out the histogram
-	output_histogram(h_gpu_histogram);
+	output_histogram(h_gpu_histogram, 1);
 
 
 
@@ -262,7 +265,7 @@ int main(int argc, char **argv)
 
 	//now for the comparisons between the CPU and GPU
 	printf("Now the differences between the two histograms: \n");
-	output_histogram(h_diff_histogram);
+	output_histogram(h_diff_histogram, 0);
 	
 	return 0;
 }
