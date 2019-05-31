@@ -183,7 +183,7 @@ int main(int argc, char **argv)
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
 	histogram = (bucket *)malloc(bucketsize);
 
-	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
+	atom_list = (atom *)malloc(atomsize);
 
 	//allocate any needed host side gpu vars here
 	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
