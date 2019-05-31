@@ -202,7 +202,7 @@ int main(int argc, char **argv)
 	gettimeofday(&startTime, &Idunno);
 
 	//run the kernel
-	PDH_kernel<<<PDH_acnt/256.0, 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
+	PDH_kernel<<<PDH_acnt/128.0, 128>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
 
