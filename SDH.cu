@@ -34,8 +34,9 @@ double   PDH_res;		/* value of w                             */
 atom * atom_list;		/* list of all data points                */
 
 //add vars for gpu
+bucket * h_gpu_histogram;
 bucket * d_gpu_histogram;
-atom * d_atom_list;
+atom * d_atom_list;			//we will use the atom list as the original code defines it
 
 //add another histogram to get the differences
 bucket * h_diff_histogram;
@@ -77,6 +78,46 @@ int PDH_baseline() {
 	}
 	return 0;
 }
+
+
+/*
+	global kernel for calculating the SDH
+	it just occurred to me that this makes no effort to protect against conflicting writes in the histogram
+	... oh well, we'll see what happens
+*/
+__global__ void PDH_GPU(bucket * histogram, atom * atom_list, double res){
+	int id = blockIdx.x*blockDim.x + threadIdx.x;
+	int j, h_pos;
+	double dist;
+
+	double p1;
+	double p2;
+	double t;
+	for(j = 0; j < PDH_acnt; j++)
+	{
+		dist = 0.0;
+		//get the x
+		p1 = atom_list[id].x_pos;
+		p2 = atom_list[j].x_pos;
+		t = p1 - p2;
+		dist += t;
+		//get the y
+		p1 = atom_list[id].y_pos;
+		p2 = atom_list[j].y_pos;
+		t = p1 - p2;
+		dist += t;
+		//get the z
+		p1 = atom_list[id].z_pos;
+		p2 = atom_list[j].z_pos;
+		t = p1 - p2;
+		dist += t;
+
+		dist = sqrt(dist);	//does this require a float parameter, or should double be fine?
+		h_pos = (int) (dist / res);
+		histogram[h_pos].d_cnt++;
+	}
+}
+
 
 /* 
 	set a checkpoint and show the (natural) running time in seconds 
@@ -140,6 +181,9 @@ int main(int argc, char **argv)
 
 	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
 
+	//allocate any needed host side gpu vars here
+	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	h_diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 	
 	srand(1);
 	/* generate data following a uniform distribution */
@@ -159,6 +203,51 @@ int main(int argc, char **argv)
 	
 	/* print out the histogram */
 	output_histogram(histogram);
+
+
+	//now for the gpu part
+	//allocate relevant information
+	int atomsize = sizeof(atom)*PDH_acnt;
+	int bucketsize = sizeof(bucket)*num_buckets;
+	cudaMalloc((void**) &d_gpu_histogram, bucketsize);
+	cudaMalloc((void**) &d_atom_list, atomsize);
+
+	//copy host atomlist over to the GPU
+	cudaMemcpy(d_atom_list, atomlist, atomsize, cudaMemcpyHostToDevice);
+
+	//start the timer
+	gettimeofday(&startTime, &Idunno);
+
+	//call the kernel here
+	//i have no idea if this is optimal, I'm just throwing in a number
+	//the threads are split up based on the # of atoms, as each atom needs to process its collision pairs and update the histogram
+	PDH_GPU<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_res);
+
+	//copy the results from the GPU back
+	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, bucketsize, cudaMemcpyDeviceToHost);
+	//check the total running time
+	report_running_time_GPU();
+
+	//dont forget to free your crap from the GPU
+	cudaFree(d_gpu_histogram);
+	cudaFree(d_atom_list);
+
+	//print out the histogram
+	output_histogram(h_gpu_histogram);
+
+
+
+	//calculate the differences between the two and store it
+	int i;
+	for(i = 0; i < num_buckets; i ++)
+	{
+		h_diff_histogram[i].d_cnt = histogram[i].d_cnt - h_gpu_histogram[i].d_cnt;
+	}
+
+
+	//now for the comparisons between the CPU and GPU
+	printf("Now the differences between the two histograms: \n");
+	output_histogram(h_diff_histogram);
 	
 	return 0;
 }
