@@ -88,10 +88,7 @@ int PDH_baseline() {
 }
 
 /*
-	SDH kernel - a really crappy one, but I just want to check that this thing actually works
-	//update, okay so this is starting to make sense... but there's still an issue
-	// ther are 2 last values of the histogram whose values are complete nonsense
-	//though everything should theoretically be 6, those values do not seem to be getting set at all
+	SDH kernel - a really crappy one
 */
 
 __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
@@ -171,20 +168,6 @@ void output_histogram(bucket* histogram){
 }
 
 
-void output_diff_histogram_percent(){
-	int i; 
-	long long total_cnt = 0;
-	for(i=0; i< num_buckets; i++) {
-		if(i%5 == 0) /* we print 5 buckets in a row */
-			printf("\n%02d: ", i);
-		printf("%1f ", h_gpu_histogram[i].d_cnt/ (double)histogram[i].d_cnt);
-	  	/* we also want to make sure the total distance count is correct */
-		if(i == num_buckets - 1)	
-			printf("\n");
-		else printf("| ");
-	}
-}
-
 int main(int argc, char **argv)
 {
 	int i;
@@ -260,7 +243,6 @@ int main(int argc, char **argv)
 
 
 	output_histogram(diff_histogram);
-	//output_diff_histogram_percent();
 
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_list);
