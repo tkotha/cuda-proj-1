@@ -82,6 +82,7 @@ int PDH_baseline() {
 			h_pos = (int) (dist / PDH_res);
 			histogram[h_pos].d_cnt++;
 		} 
+		printf("%d, ", i);	//just for checking if we are in the CPU or GPU
 	}
 	return 0;
 }
@@ -104,7 +105,6 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 	double y2;
 	double z1;
 	double z2;
-	//let's just do sometihng simple, like set all hist values to 5
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
