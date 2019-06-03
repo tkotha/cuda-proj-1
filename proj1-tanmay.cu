@@ -115,10 +115,22 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			h_pos = (int) (dist / res);
 			  // __syncthreads();
 			  // d_histogram[h_pos].d_cnt += 1;		//very odd that this doesnt work but atomicAdd does... I wonder why
+													//long story short... it's basically because having synchronized threads 
+													//at this point doesnt prevent race condiions on the increment itself
 			  // __syncthreads();
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
 }
+
+
+/*
+	SDH kernel 2.0 - now the goal is to make a better kernel, that is at least 10x faster (at first)
+*/
+__global__ void PDH_kernel2(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
+{
+
+}
+
 
 /* 
 	set a checkpoint and show the (natural) running time in seconds 
