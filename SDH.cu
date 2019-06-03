@@ -82,7 +82,7 @@ int PDH_baseline() {
 			h_pos = (int) (dist / PDH_res);
 			histogram[h_pos].d_cnt++;
 		} 
-		//printf("%d, ", i);	//just for checking if we are in the CPU or GPU
+		printf("%d, ", i);	//just for checking if we are in the CPU or GPU
 	}
 	return 0;
 }
@@ -116,10 +116,10 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			z2 = d_atom_list[j].z_pos;
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
-			  __syncthreads();
-			  d_histogram[h_pos].d_cnt += 1;	
-			  __syncthreads();
-			//atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			  // __syncthreads();
+			  // d_histogram[h_pos].d_cnt += 1;	
+			  // __syncthreads();
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
 }
 
