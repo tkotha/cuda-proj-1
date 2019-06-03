@@ -60,13 +60,13 @@ double p2p_distance(int ind1, int ind2) {
 }
 
 //get cuda error
-void cuda_err(cudaError_t e, char in[])
-{
-	if (e != cudaSuccess){
-		printf("CUDA Error: %s, %s \n", in, cudaGetErrorString(e));
-		exit(EXIT_FAILURE);
-	}
-}
+// void cuda_err(cudaError_t e, char in[])
+// {
+// 	if (e != cudaSuccess){
+// 		printf("CUDA Error: %s, %s \n", in, cudaGetErrorString(e));
+// 		exit(EXIT_FAILURE);
+// 	}
+// }
 
 
 /* 
@@ -117,7 +117,7 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
 			  // __syncthreads();
-			  // d_histogram[h_pos].d_cnt += 1;	
+			  // d_histogram[h_pos].d_cnt += 1;		//very odd that this doesnt work but atomicAdd does... I wonder why
 			  // __syncthreads();
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
@@ -225,26 +225,22 @@ int main(int argc, char **argv)
 	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 
 	//copy the atomlist over from host to device
-	cuda_err(cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt), "malloc atom_list");
-	cuda_err(cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice),
-						"memcpy atom_list to gpu");
+	cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
+	cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
 
 	//allocate the histogram data on the device
-	cuda_err(cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets),
-						"malloc d_gpu_histogram");
-	cuda_err(cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(bucket)*num_buckets,cudaMemcpyHostToDevice),
-						"memcpy gpu_histogram to gpu");
+	cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
+	cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(bucket)*num_buckets,cudaMemcpyHostToDevice);
 
 	//start the timer
 	gettimeofday(&startTime, &Idunno);
 
 	//run the kernel
 	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	cuda_err(cudaGetLastError(), "Checking PDH_kernel");
+	
 
 	//copy the histogram results back from gpu over to cpu
-	cuda_err(cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost),
-						"copy back histogram to cpu");
+	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
 
 	//check total running time
 	report_running_time_GPU();
@@ -266,8 +262,8 @@ int main(int argc, char **argv)
 	output_histogram(diff_histogram);
 	//output_diff_histogram_percent();
 
-	cuda_err(cudaFree(d_gpu_histogram), "free histogram");
-	cuda_err(cudaFree(d_atom_list), "free atom list");
+	cudaFree(d_gpu_histogram);
+	cudaFree(d_atom_list);
 	free(histogram);
 	free(atom_list);
 	free(h_gpu_histogram);
