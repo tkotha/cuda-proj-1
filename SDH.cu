@@ -207,7 +207,7 @@ int main(int argc, char **argv)
 		atom_list[i].z_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
 	}
 	/* start counting time */
-	printf("Starting CPU...\n")
+	printf("Starting CPU...\n");
 	gettimeofday(&startTime, &Idunno);
 	
 	/* call CPU single thread version to compute the histogram */
