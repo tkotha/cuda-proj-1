@@ -82,7 +82,7 @@ int PDH_baseline() {
 			h_pos = (int) (dist / PDH_res);
 			histogram[h_pos].d_cnt++;
 		} 
-		printf("%d, ", i);	//just for checking if we are in the CPU or GPU
+		//printf("%d, ", i);	//just for checking if we are in the CPU or GPU
 	}
 	return 0;
 }
