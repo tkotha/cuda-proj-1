@@ -82,7 +82,7 @@ int PDH_baseline() {
 			h_pos = (int) (dist / PDH_res);
 			histogram[h_pos].d_cnt++;
 		} 
-		printf("%d, ", i);	//just for checking if we are in the CPU or GPU
+		
 	}
 	return 0;
 }
@@ -207,6 +207,7 @@ int main(int argc, char **argv)
 		atom_list[i].z_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
 	}
 	/* start counting time */
+	printf("Starting CPU...\n")
 	gettimeofday(&startTime, &Idunno);
 	
 	/* call CPU single thread version to compute the histogram */
@@ -217,7 +218,7 @@ int main(int argc, char **argv)
 	
 	/* print out the histogram */
 	output_histogram(histogram);
-	
+	printf("Starting GPU...\n");
 
 	//cudaDeviceReset();
 	//gpu code--------------------------------------------------------------------------------
