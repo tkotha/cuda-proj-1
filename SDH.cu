@@ -280,9 +280,13 @@ int main(int argc, char **argv)
 	output_histogram(diff_histogram);
 
 	cudaFree(d_gpu_histogram);
-	cudaFree(d_atom_list);
+	cudaFree(d_atom_x_list);
+	cudaFree(d_atom_y_list);
+	cudaFree(d_atom_z_list);
 	free(histogram);
-	free(atom_list);
+	free(atom_x_list);
+	free(atom_y_list);
+	free(atom_z_list);
 	free(h_gpu_histogram);
 	free(diff_histogram); 
 
