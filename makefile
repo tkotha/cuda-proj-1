@@ -2,7 +2,7 @@ all:
 	nvcc SDH.cu -o SDH
 commit:
 	git add -A .
-	git commit -m "that's all for day 1. at the moment i have something that... appears to work. however the differences seem too large for my taste, so I'll have to ask the TA what might be going on"
+	git commit -m "working on project 2 code now.. step 0: make sure we have data working in SOA format"
 	git push origin
 pull:
 	git pull origin

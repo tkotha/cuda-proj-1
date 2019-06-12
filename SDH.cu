@@ -36,8 +36,18 @@ long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
 double   PDH_res;		/* value of w                             */
 
-atom * atom_list;		/* list of all data points                */
-atom * d_atom_list;
+// atom * atom_list;		/* list of all data points                */
+// atom * d_atom_list;
+
+//SOA version of atom_list
+double * atom_x_list;
+double * atom_y_list;
+double * atom_z_list;
+
+//SOA version of d_atom_list
+double * d_atom_x_list;
+double * d_atom_y_list;
+double * d_atom_z_list;
 
 /* These are for an old way of tracking time */
 struct timezone Idunno;	
@@ -49,13 +59,18 @@ struct timeval startTime, endTime;
 */
 double p2p_distance(int ind1, int ind2) {
 	
-	double x1 = atom_list[ind1].x_pos;
-	double x2 = atom_list[ind2].x_pos;
-	double y1 = atom_list[ind1].y_pos;
-	double y2 = atom_list[ind2].y_pos;
-	double z1 = atom_list[ind1].z_pos;
-	double z2 = atom_list[ind2].z_pos;
-		
+	// double x1 = atom_list[ind1].x_pos;
+	// double x2 = atom_list[ind2].x_pos;
+	// double y1 = atom_list[ind1].y_pos;
+	// double y2 = atom_list[ind2].y_pos;
+	// double z1 = atom_list[ind1].z_pos;
+	// double z2 = atom_list[ind2].z_pos;
+	double x1 = atom_x_list[ind1];
+	double x2 = atom_x_list[ind2];
+	double y1 = atom_y_list[ind1];
+	double y2 = atom_y_list[ind2];
+	double z1 = atom_z_list[ind1];
+	double z2 = atom_z_list[ind2];
 	return sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 }
 
@@ -91,7 +106,7 @@ int PDH_baseline() {
 	SDH kernel - a really crappy one
 */
 
-__global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acnt, double res)
+__global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
@@ -105,17 +120,20 @@ __global__ void PDH_kernel(bucket* d_histogram, atom* d_atom_list, long long acn
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
-			x1 = d_atom_list[id].x_pos;
-			x2 = d_atom_list[j].x_pos;
-			y1 = d_atom_list[id].y_pos;
-			y2 = d_atom_list[j].y_pos;
-			z1 = d_atom_list[id].z_pos;
-			z2 = d_atom_list[j].z_pos;
+			// x1 = d_atom_list[id].x_pos;
+			// x2 = d_atom_list[j].x_pos;
+			// y1 = d_atom_list[id].y_pos;
+			// y2 = d_atom_list[j].y_pos;
+			// z1 = d_atom_list[id].z_pos;
+			// z2 = d_atom_list[j].z_pos;
+			x1 = d_atom_x_list[id];
+			x2 = d_atom_x_list[j];
+			y1 = d_atom_y_list[id];
+			y2 = d_atom_y_list[j];
+			z1 = d_atom_z_list[id];
+			z2 = d_atom_z_list[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
-			  // __syncthreads();
-			  // d_histogram[h_pos].d_cnt += 1;		//very odd that this doesnt work but atomicAdd does... I wonder why
-			  // __syncthreads();
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
 }
@@ -179,15 +197,23 @@ int main(int argc, char **argv)
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
 	histogram =       (bucket *)malloc(sizeof(bucket)*num_buckets);
 
-	atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
+	// atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
+	atom_x_list = (double *)malloc(sizeof(double)*PDH_acnt);
+	atom_y_list = (double *)malloc(sizeof(double)*PDH_acnt);
+	atom_z_list = (double *)malloc(sizeof(double)*PDH_acnt);
+
 
 	
 	srand(1);
 	/* generate data following a uniform distribution */
 	for(i = 0;  i < PDH_acnt; i++) {
-		atom_list[i].x_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-		atom_list[i].y_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-		atom_list[i].z_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+		// atom_list[i].x_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+		// atom_list[i].y_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+		// atom_list[i].z_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+
+		atom_x_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+		atom_y_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+		atom_z_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
 	}
 	/* start counting time */
 	printf("Starting CPU...\n");
@@ -208,8 +234,17 @@ int main(int argc, char **argv)
 	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
 
 	//copy the atomlist over from host to device
-	cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
-	cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
+	// cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
+	// cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_atom_x_list, sizeof(double)*PDH_acnt);
+	cudaMemcpy(d_atom_x_list, atom_x_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
+
+	cudaMalloc((void**)&d_atom_y_list, sizeof(double)*PDH_acnt);
+	cudaMemcpy(d_atom_y_list, atom_y_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
+
+	cudaMalloc((void**)&d_atom_z_list, sizeof(double)*PDH_acnt);
+	cudaMemcpy(d_atom_z_list, atom_z_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
+
 
 	//allocate the histogram data on the device
 	cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
@@ -219,8 +254,8 @@ int main(int argc, char **argv)
 	gettimeofday(&startTime, &Idunno);
 
 	//run the kernel
-	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	
+	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
+	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
