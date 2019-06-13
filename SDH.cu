@@ -119,7 +119,9 @@ int PDH_baseline() {
 	SDH kernel - a really crappy one
 */
 
-__global__ void PDH_kernel(unsigned long long* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res)
+__global__ void PDH_kernel(unsigned long long* d_histogram, 
+							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
@@ -160,7 +162,8 @@ __global__ void PDH_kernel(unsigned long long* d_histogram, double* d_atom_x_lis
 
 __global__ void PDH_kernel2(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
-							long long acnt, double res, int M, int B)
+							long long acnt, double res,
+							 int M, int B)
 {
 	//M = Grid Size = total number of blocks
 	//B = Block Size
@@ -179,10 +182,6 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	#define RX(tid) R[tid + BLOCK_SIZE*0]
 	#define RY(tid) R[tid + BLOCK_SIZE*1]
 	#define RZ(tid) R[tid + BLOCK_SIZE*2]
-
-	// #define RX(tid) R[tid*3 + 0]
-	// #define RY(tid) R[tid*3 + 1]
-	// #define RZ(tid) R[tid*3 + 2]
 	
 	//make sure we are a valid atom in the array
 	if(reg > acnt) return;
@@ -203,7 +202,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 			for(j = 0; j < B; j++)
 			{
-				// if(j + i*B < acnt)
+				if(j + i*B < acnt)
 				{
 					x2 = R[j + BLOCK_SIZE*0];
 					y2 = R[j + BLOCK_SIZE*1];
@@ -364,7 +363,10 @@ int main(int argc, char **argv)
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
-	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount, BLOCK_SIZE);
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res,
+		 blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
