@@ -175,15 +175,15 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 
 		Rblock[threadIdx.x] = 	d_atom_x_list[blockDim.x*i + threadIdx.x];
 		Rblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
-		zblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
 
 		__syncthreads();
 		for(j = 0; j < blockDim.x; j++)
 		{
 			//this func
-			x2 = xblock[j];
-			y2 = yblock[j + BLOCK_SIZE];
-			z2 = zblock[j + BLOCK_SIZE*2];
+			x2 = Rblock[j];
+			y2 = Rblock[j + BLOCK_SIZE];
+			z2 = Rblock[j + BLOCK_SIZE*2];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int)(dist/res);
 			if(threadIdx.x == 0)
@@ -195,17 +195,17 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	}
 
 	//intrablock for loop
-	xblock[threadIdx.x] = 	d_atom_x_list[id];
-	yblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[id];
-	zblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[id];
+	Rblock[threadIdx.x] = 	d_atom_x_list[id];
+	Rblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[id];
+	Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[id];
 
 	__syncthreads();
 	for(i = threadIdx.x +1; i < blockDim.x; i++)
 	{
 		//this func
-		x2 = xblock[j];
-		y2 = yblock[j +BLOCK_SIZE];
-		z2 = zblock[j +BLOCK_SIZE*2];
+		x2 = Rblock[j];
+		y2 = Rblock[j +BLOCK_SIZE];
+		z2 = Rblock[j +BLOCK_SIZE*2];
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 		//atomic add
 		h_pos = (int)(dist/res);
