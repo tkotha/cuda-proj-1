@@ -164,7 +164,7 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	//once we're sure this much is correct, we'll work out making it dynamically sizeable
 	//BLOCK_COUNT = 256
 	//to access the x(0) component, the y(1) component, and the z(2) component, do tid + blockdim*axes
-	 __shared__ double Rblock[BLOCK_SIZE*3];
+	extern __shared__ double Rblock[];
 	 // __shared__ double yblock[BLOCK_SIZE];
 	 // __shared__ double zblock[BLOCK_SIZE];
 	 
@@ -339,7 +339,7 @@ int main(int argc, char **argv)
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2<<<blockcount, BLOCK_SIZE>>>
+	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
 	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
 
 	//copy the histogram results back from gpu over to cpu
