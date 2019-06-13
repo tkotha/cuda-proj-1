@@ -158,7 +158,7 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	double x1, y1, z1;
 	double x2, y2, z2;
 	double d;
-	extern __shared__ R[];	//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory
+	extern __shared__ double R[];	//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory
 							//where t is a specific index into the 'atom' array
 							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
 							//the y array should be accessed by R[t + BLOCK_SIZE]	//or is it R[t*3 + 1]?
