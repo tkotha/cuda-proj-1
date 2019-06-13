@@ -12,7 +12,7 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-
+#define BLOCK_COUNT 256 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 /* descriptors for single atom in the tree */
 typedef struct atomdesc {
 	double x_pos;
@@ -167,48 +167,53 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	//all we have to do is 'access' the correct portions of shared mem
 	//so, threadid + blockdim*<axes>
 	//where axes is 0=x, 1 = y, and z = 2
-	extern __shared__ double r_block[];
+	//ok, for right now, just to see if the basic code even works, we'll keep to a static block size
+	//say 256
+	//once we're sure this much is correct, we'll work out making it dynamically sizeable
+	 __shared__ double r_block[BLOCK_COUNT];
+	 double *xblock = r_block;
+	 double *yblock = (double*)&x_block[BLOCK_COUNT];
+	 double *zblock = (double*)&y_block[BLOCK_COUNT];
 
 	
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < gridDim.x; i++)
 	{
 
-		r_block[threadIdx.x] = 					d_atom_x_list[blockDim.x*i + threadIdx.x];
-		r_block[threadIdx.x + blockDim.x] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
-		r_block[threadIdx.x + blockDim.x*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
+		xblock[threadIdx.x] = 	d_atom_x_list[blockDim.x*i + threadIdx.x];
+		yblock[threadIdx.x] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
+		zblock[threadIdx.x] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
 
 		__syncthreads();
-		printf("%f, %f", r_block[threadIdx.x], d_atom_x_list[blockDim.x*i + threadIdx.x]);
 		for(j = 0; j < blockDim.x; j++)
 		{
 			//this func
-			x2 = r_block[j];
-			y2 = r_block[j + blockDim.x];
-			z2 = r_block[j + blockDim.x*2];
+			x2 = xblock[j];
+			y2 = yblock[j];
+			z2 = zblock[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			//atomic add
 			h_pos = (int)(dist/res);
-			atomicAdd((unsigned long long int*)&d_histogram[0].d_cnt,1);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
 	}
 
 	//intrablock for loop
-	r_block[threadIdx.x] = 					d_atom_x_list[id];
-	r_block[threadIdx.x + blockDim.x] = 	d_atom_y_list[id];
-	r_block[threadIdx.x + blockDim.x*2] = 	d_atom_z_list[id];
+	xblock[threadIdx.x] = 	d_atom_x_list[id];
+	yblock[threadIdx.x] = 	d_atom_y_list[id];
+	zblock[threadIdx.x] = 	d_atom_z_list[id];
 
 	__syncthreads();
 	for(i = threadIdx.x +1; i < blockDim.x; i++)
 	{
 		//this func
-		x2 = r_block[j];
-		y2 = r_block[j + blockDim.x];
-		z2 = r_block[j + blockDim.x*2];
+		x2 = xblock[j];
+		y2 = yblock[j];
+		z2 = zblock[j];
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 		//atomic add
 		h_pos = (int)(dist/res);
-		atomicAdd((unsigned long long int*)&d_histogram[1].d_cnt,1);
+		atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 	}
 
 
@@ -332,10 +337,10 @@ int main(int argc, char **argv)
 
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	int blockcount = 256;
-	PDH_kernel2<<<ceil(PDH_acnt/((float) blockcount)), blockcount, 3*blockcount*sizeof(double)>>>
-	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
+	int blockcount = BLOCK_COUNT;
+	PDH_kernel<<<ceil(PDH_acnt/((float)blockcount)), blockcount>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	// PDH_kernel2<<<ceil(PDH_acnt/((float(blockcount))), blockcount>>>
+	// (d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
