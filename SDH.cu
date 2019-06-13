@@ -362,11 +362,13 @@ int main(int argc, char **argv)
 
 
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
-	printf("blockcount: %d",blockcount);
+	int shmemsize = BLOCK_SIZE*3*sizeof(double);
+	printf("blockcount: %d\n",blockcount);
+	printf("shmemsize:  %d\n", shmemsize);
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
+	PDH_kernel2<<<blockcount, BLOCK_SIZE, shmemsize>>>
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res,
