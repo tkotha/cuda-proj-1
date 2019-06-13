@@ -212,6 +212,7 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 				printf("hpos: %d\n", h_pos);
 			}
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			printf("histbucket: %lld", d_histogram[h_pos].d_cnt);
 		}
 	}
 
