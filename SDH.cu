@@ -172,8 +172,8 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	//once we're sure this much is correct, we'll work out making it dynamically sizeable
 	 __shared__ double r_block[BLOCK_COUNT];
 	 double *xblock = r_block;
-	 double *yblock = (double*)&x_block[BLOCK_COUNT];
-	 double *zblock = (double*)&y_block[BLOCK_COUNT];
+	 double *yblock = (double*)&xblock[BLOCK_COUNT];
+	 double *zblock = (double*)&yblock[BLOCK_COUNT];
 
 	
 	//interblock for loop, for the M value, use the grid's dimensions
