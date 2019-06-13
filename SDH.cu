@@ -177,7 +177,7 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	 // double *yblock = (double*)&xblock[BLOCK_COUNT];
 	 // double *zblock = (double*)&yblock[BLOCK_COUNT];
 
-	
+	printf("256\n");
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < gridDim.x; i++)
 	{
