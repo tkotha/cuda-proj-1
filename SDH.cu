@@ -174,7 +174,6 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	double x1, y1, z1;
 	double x2, y2, z2;
 	double d;
-	int limit;
 	extern __shared__ double R[];	//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory
 							//where t is a specific index into the 'atom' array
 							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
@@ -363,7 +362,7 @@ int main(int argc, char **argv)
 
 
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
-
+	printf("blockcount: %d",blockcount);
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
