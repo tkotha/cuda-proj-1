@@ -334,7 +334,7 @@ int main(int argc, char **argv)
 
 
 
-	int blockcount = ceil(PDH_acnt / (float) BLOCK_SIZE);
+	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
 
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
