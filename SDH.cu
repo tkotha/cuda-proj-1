@@ -194,7 +194,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = b+1; i < M; i++)
 	{
-		if( ((long long)t + (long long)i*(long long)B) < acnt)
+		if(t + i*B < acnt)
 		{
 			R[t + BLOCK_SIZE*0] = d_atom_x_list[t + i*B];
 			R[t + BLOCK_SIZE*1] = d_atom_y_list[t + i*B];
@@ -204,7 +204,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 			for(j = 0; j < B; j++)
 			{
-				if(((long long)j + (long long)i*(long long)B) < acnt)
+				if(j + i*B < acnt)
 				{
 					x2 = R[j + BLOCK_SIZE*0];
 					y2 = R[j + BLOCK_SIZE*1];
@@ -215,6 +215,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 					atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
+			__syncthreads();
 		}
 		
 		
@@ -228,7 +229,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = t+1; i < B; i++)
 	{
-		if(((long long)i + (long long)b*(long long)B) < acnt)
+		if( i + b*B < acnt)
 		{
 			x2 = R[i + BLOCK_SIZE*0];
 			y2 = R[i + BLOCK_SIZE*1];
