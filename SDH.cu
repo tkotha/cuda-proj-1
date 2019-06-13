@@ -361,7 +361,8 @@ int main(int argc, char **argv)
 	int bi;
 	for(bi = 0; bi < num_buckets; bi++)
 	{
-		diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
+		// diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
+		diff_histogram[bi] = histogram[bi] - h_gpu_histogram[bi];
 	}
 
 
