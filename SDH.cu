@@ -193,7 +193,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = b+1; i < M; i++)
 	{
-		if(t + i*B < acnt)
+		// if(t + i*B < acnt)
 		{
 			R[t + BLOCK_SIZE*0] = d_atom_x_list[t + i*B];
 			R[t + BLOCK_SIZE*1] = d_atom_y_list[t + i*B];
@@ -203,7 +203,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 			for(j = 0; j < B; j++)
 			{
-				if(j + i*B < acnt)
+				// if(j + i*B < acnt)
 				{
 					x2 = R[j + BLOCK_SIZE*0];
 					y2 = R[j + BLOCK_SIZE*1];
@@ -228,7 +228,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = t+1; i < B; i++)
 	{
-		if( i + b*B < acnt)
+		// if( i + b*B < acnt)
 		{
 			x2 = R[i + BLOCK_SIZE*0];
 			y2 = R[i + BLOCK_SIZE*1];
@@ -312,10 +312,6 @@ int main(int argc, char **argv)
 	srand(1);
 	/* generate data following a uniform distribution */
 	for(i = 0;  i < PDH_acnt; i++) {
-		// atom_list[i].x_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-		// atom_list[i].y_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-		// atom_list[i].z_pos = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-
 		atom_x_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
 		atom_y_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
 		atom_z_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
@@ -362,7 +358,7 @@ int main(int argc, char **argv)
 
 
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
-	int shmemsize = BLOCK_SIZE*3*sizeof(double);
+	int shmemsize = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize:  %d\n", shmemsize);
 	//run the kernel
