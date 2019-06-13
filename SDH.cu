@@ -14,17 +14,17 @@
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define BLOCK_SIZE 64 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 /* descriptors for single atom in the tree */
-typedef struct atomdesc {
-	double x_pos;
-	double y_pos;
-	double z_pos;
-} atom;
+// typedef struct atomdesc {
+// 	double x_pos;
+// 	double y_pos;
+// 	double z_pos;
+// } atom;
 
-typedef struct hist_entry{
-	//float min;
-	//float max;
-	unsigned long long d_cnt;   /* need a long long type as the count might be huge */
-} bucket;
+// typedef struct hist_entry{
+// 	//float min;
+// 	//float max;
+// 	unsigned long long d_cnt;   /* need a long long type as the count might be huge */
+// } bucket;
 
 
 // bucket * histogram;		/* list of all buckets in the histogram   */
