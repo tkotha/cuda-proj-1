@@ -189,7 +189,7 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			//atomic add
 			h_pos = (int)(dist/res);
-			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			atomicAdd((unsigned long long int*)&d_histogram[0].d_cnt,1);
 		}
 	}
 
@@ -208,7 +208,7 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 		//atomic add
 		h_pos = (int)(dist/res);
-		atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+		atomicAdd((unsigned long long int*)&d_histogram[1].d_cnt,1);
 	}
 
 
