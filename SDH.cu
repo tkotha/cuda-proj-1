@@ -163,26 +163,27 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	
 	//once we're sure this much is correct, we'll work out making it dynamically sizeable
 	//BLOCK_COUNT = 256
-	 __shared__ double xblock[BLOCK_SIZE];
-	 __shared__ double yblock[BLOCK_SIZE];
-	 __shared__ double zblock[BLOCK_SIZE];
+	//to access the x(0) component, the y(1) component, and the z(2) component, do tid + blockdim*axes
+	 __shared__ double Rblock[BLOCK_SIZE*3];
+	 // __shared__ double yblock[BLOCK_SIZE];
+	 // __shared__ double zblock[BLOCK_SIZE];
 	 
 	 //small debug logic
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < M; i++)
 	{
 
-		xblock[threadIdx.x] = 	d_atom_x_list[blockDim.x*i + threadIdx.x];
-		yblock[threadIdx.x] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
-		zblock[threadIdx.x] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x] = 	d_atom_x_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
+		zblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
 
 		__syncthreads();
 		for(j = 0; j < blockDim.x; j++)
 		{
 			//this func
 			x2 = xblock[j];
-			y2 = yblock[j];
-			z2 = zblock[j];
+			y2 = yblock[j + BLOCK_SIZE];
+			z2 = zblock[j + BLOCK_SIZE*2];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int)(dist/res);
 			if(threadIdx.x == 0)
@@ -195,16 +196,16 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 
 	//intrablock for loop
 	xblock[threadIdx.x] = 	d_atom_x_list[id];
-	yblock[threadIdx.x] = 	d_atom_y_list[id];
-	zblock[threadIdx.x] = 	d_atom_z_list[id];
+	yblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[id];
+	zblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[id];
 
 	__syncthreads();
 	for(i = threadIdx.x +1; i < blockDim.x; i++)
 	{
 		//this func
 		x2 = xblock[j];
-		y2 = yblock[j];
-		z2 = zblock[j];
+		y2 = yblock[j +BLOCK_SIZE];
+		z2 = zblock[j +BLOCK_SIZE*2];
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 		//atomic add
 		h_pos = (int)(dist/res);
