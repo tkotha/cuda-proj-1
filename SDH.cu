@@ -166,8 +166,8 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	extern __shared__ double r_block[];
 
 	double *xblock = r_block;
-	double *yblock = &xblock[blockcount];
-	double *zblock = &yblock[blockcount];
+	double *yblock = (double*)&xblock[blockcount];
+	double *zblock = (double*)&yblock[blockcount];
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < gridDim.x; i++)
 	{
