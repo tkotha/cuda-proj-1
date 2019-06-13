@@ -203,7 +203,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 			for(j = 0; j < B; j++)
 			{
-				if(j + i*B < acnt)
+				// if(j + i*B < acnt)
 				{
 					x2 = R[j + BLOCK_SIZE*0];
 					y2 = R[j + BLOCK_SIZE*1];
