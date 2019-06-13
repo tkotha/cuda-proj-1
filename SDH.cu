@@ -173,11 +173,13 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < gridDim.x; i++)
 	{
+
 		r_block[threadIdx.x] = 					d_atom_x_list[blockDim.x*i + threadIdx.x];
 		r_block[threadIdx.x + blockDim.x] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
 		r_block[threadIdx.x + blockDim.x*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
 
 		__syncthreads();
+		printf("%f, %f", r_block[threadIdx.x], d_atom_x_list[blockDim.x*i + threadIdx.x]);
 		for(j = 0; j < blockDim.x; j++)
 		{
 			//this func
