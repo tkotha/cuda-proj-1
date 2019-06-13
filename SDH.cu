@@ -138,6 +138,73 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 		}
 }
 
+/*
+	An attempt at an improved version of the kernel
+	step 1: get block tiling to work
+	step 2: get histogram privitization to work
+*/
+
+__global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res)
+{
+	//our location in the global atom list
+	int id = blockIdx.x*blockDim.x + threadIdx.x;
+
+	//load our single data point
+	double x1 = d_atom_x_list[id];
+	double y1 = d_atom_y_list[id];
+	double z1 = d_atom_z_list[id];
+	double x2,y2,z2;
+	int i, j, h_pos;
+	double dist;
+
+	//our single block tile for handling the nested loop
+	__shared__ double r_block_x[blockDim.x];
+	__shared__ double r_block_y[blockDim.x];
+	__shared__ double r_block_z[blockDim.x];
+
+	//interblock for loop, for the M value, use the grid's dimensions
+	for(i = blockIdx.x+1; i < gridDim.x; i++)
+	{
+		r_block_x[threadIdx.x] = d_atom_x_list[blockDim.x*i + threadIdx.x];
+		r_block_y[threadIdx.x] = d_atom_y_list[blockDim.x*i + threadIdx.x];
+		r_block_z[threadIdx.x] = d_atom_z_list[blockDim.x*i + threadIdx.x];
+
+		__syncthreads();
+		for(j = 0; j < blockDim.x; j++)
+		{
+			//this func
+			x2 = r_block_x[j];
+			y2 = r_block_y[j];
+			z2 = r_block_z[j];
+			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			//atomic add
+			h_pos = (int)(dist/res);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+		}
+	}
+
+	//intrablock for loop
+	r_block_x[threadIdx.x] = d_atom_x_list[id];
+	r_block_x[threadIdx.x] = d_atom_x_list[id];
+	r_block_y[threadIdx.x] = d_atom_y_list[id];
+
+	__syncthreads();
+	for(i = threadIdx.x +1; i < blockDim.x; i++)
+	{
+		//this func
+		x2 = r_block_x[j];
+		y2 = r_block_y[j];
+		z2 = r_block_z[j];
+		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+		//atomic add
+		h_pos = (int)(dist/res);
+		atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+	}
+
+
+	//write output back to histogram... not yet! we havent gotten to the privatized histogram yet!
+}
+
 /* 
 	set a checkpoint and show the (natural) running time in seconds 
 */
@@ -255,7 +322,8 @@ int main(int argc, char **argv)
 
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	PDH_kernel2<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, );
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
