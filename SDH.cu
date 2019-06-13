@@ -147,7 +147,7 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 
 __global__ void PDH_kernel2(bucket* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
-							long long acnt, double res, int blockcount)
+							long long acnt, double res, int M)
 {
 	//our location in the global atom list
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
@@ -169,7 +169,7 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	 
 	 //small debug logic
 	//interblock for loop, for the M value, use the grid's dimensions
-	for(i = blockIdx.x+1; i < gridDim.x; i++)
+	for(i = blockIdx.x+1; i < M; i++)
 	{
 
 		xblock[threadIdx.x] = 	d_atom_x_list[blockDim.x*i + threadIdx.x];
