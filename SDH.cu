@@ -135,12 +135,6 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
-			// x1 = d_atom_list[id].x_pos;
-			// x2 = d_atom_list[j].x_pos;
-			// y1 = d_atom_list[id].y_pos;
-			// y2 = d_atom_list[j].y_pos;
-			// z1 = d_atom_list[id].z_pos;
-			// z2 = d_atom_list[j].z_pos;
 			x1 = d_atom_x_list[id];
 			x2 = d_atom_x_list[j];
 			y1 = d_atom_y_list[id];
@@ -181,10 +175,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
 							//the y array should be accessed by R[t + BLOCK_SIZE]	//or is it R[t*3 + 1]?
 							//the z array should be accessed by R[t + BLOCK_SIZE*2] //or is it R[t*3 + 2]?
-	#define RX(tid) R[tid + BLOCK_SIZE*0]
-	#define RY(tid) R[tid + BLOCK_SIZE*1]
-	#define RZ(tid) R[tid + BLOCK_SIZE*2]
-	
+
 	//make sure we are a valid atom in the array
 	if(reg > acnt) return;
 
@@ -222,17 +213,16 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	R[t + BLOCK_SIZE*2] = d_atom_z_list[reg];
 	__syncthreads();
 
-	for(i = t+1; i < B; i++)
-	{
-		x2 = R[i + BLOCK_SIZE*0];
-		y2 = R[i + BLOCK_SIZE*1];
-		z2 = R[i + BLOCK_SIZE*2];
+	// for(i = t+1; i < B; i++)
+	// {
+	// 	x2 = R[i + BLOCK_SIZE*0];
+	// 	y2 = R[i + BLOCK_SIZE*1];
+	// 	z2 = R[i + BLOCK_SIZE*2];
 
-		d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
-		h_pos = (int) (d/res);
-		atomicAdd(&d_histogram[h_pos], 1);
-
-	}
+	// 	d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
+	// 	h_pos = (int) (d/res);
+	// 	atomicAdd(&d_histogram[h_pos], 1);
+	// }
 	__syncthreads();
 }
 
