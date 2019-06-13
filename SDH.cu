@@ -12,7 +12,7 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-#define BLOCK_SIZE 256 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
+#define BLOCK_SIZE 64 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 /* descriptors for single atom in the tree */
 typedef struct atomdesc {
 	double x_pos;
@@ -165,16 +165,14 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	//BLOCK_COUNT = 256
 	//to access the x(0) component, the y(1) component, and the z(2) component, do tid + blockdim*axes
 	extern __shared__ double Rblock[];
-	 // __shared__ double yblock[BLOCK_SIZE];
-	 // __shared__ double zblock[BLOCK_SIZE];
 	 
 	 //small debug logic
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < M; i++)
 	{
 
-		Rblock[threadIdx.x] = 	d_atom_x_list[blockDim.x*i + threadIdx.x];
-		Rblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x] = 	                d_atom_x_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x + BLOCK_SIZE] = 	    d_atom_y_list[blockDim.x*i + threadIdx.x];
 		Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
 
 		__syncthreads();
@@ -339,9 +337,9 @@ int main(int argc, char **argv)
 
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	// PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
-	// (d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
+	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
+	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);

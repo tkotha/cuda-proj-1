@@ -7,8 +7,8 @@ commit:
 pull:
 	git pull origin
 run:
-	./SDH 10000 500.0
+	./SDH 1000 500.0
 runtofile:
-	./SDH 10000 500.0 > output.txt
+	./SDH 1000 500.0 > output.txt
 clean:
 	rm -rf SDH
