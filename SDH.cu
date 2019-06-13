@@ -167,6 +167,7 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	//all we have to do is 'access' the correct portions of shared mem
 	//so, threadid + blockdim*<axes>
 	//where axes is 0=x, 1 = y, and z = 2
+	//...
 	//ok, for right now, just to see if the basic code even works, we'll keep to a static block size
 	//say 256
 	//once we're sure this much is correct, we'll work out making it dynamically sizeable
@@ -200,6 +201,10 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 			y2 = yblock[j];
 			z2 = zblock[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			if(threadIdx.x == 0)
+			{
+				printf("dist: %d\n", dist);
+			}
 			//atomic add
 			h_pos = (int)(dist/res);
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
@@ -226,6 +231,7 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 
 
 	//write output back to histogram... not yet! we havent gotten to the privatized histogram yet!
+	//__syncthreads();
 }
 
 /* 
