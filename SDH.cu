@@ -27,10 +27,15 @@ typedef struct hist_entry{
 } bucket;
 
 
-bucket * histogram;		/* list of all buckets in the histogram   */
-bucket * h_gpu_histogram;
-bucket * d_gpu_histogram;
-bucket * diff_histogram;
+// bucket * histogram;		/* list of all buckets in the histogram   */
+// bucket * h_gpu_histogram;
+// bucket * d_gpu_histogram;
+// bucket * diff_histogram;
+
+unsigned long long * histogram;
+unsigned long long * h_gpu_histogram;
+unsigned long long * d_gpu_histogram;
+unsigned long long * diff_histogram;
 
 long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
@@ -96,7 +101,8 @@ int PDH_baseline() {
 		for(j = i+1; j < PDH_acnt; j++) {
 			dist = p2p_distance(i,j);
 			h_pos = (int) (dist / PDH_res);
-			histogram[h_pos].d_cnt++;
+			// histogram[h_pos].d_cnt++;
+			histogram[h_pos]++;
 		} 
 		
 	}
@@ -107,7 +113,7 @@ int PDH_baseline() {
 	SDH kernel - a really crappy one
 */
 
-__global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res)
+__global__ void PDH_kernel(unsigned long long* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
@@ -135,7 +141,8 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 			z2 = d_atom_z_list[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
-			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			atomicAdd(&d_histogram[h_pos], 1);
 		}
 }
 
@@ -145,7 +152,7 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 	step 2: get histogram privitization to work
 */
 
-__global__ void PDH_kernel2(bucket* d_histogram, 
+__global__ void PDH_kernel2(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res, int M, int B)
 {
@@ -189,7 +196,8 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 			z2 = RZ(j);
 			d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
 			h_pos = (int) (d/res);
-			atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+			// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+			atomicAdd(&d_histogram[h_pos], 1);
 		}
 	}
 	__syncthreads();
@@ -206,7 +214,8 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 		z2 = RZ(i);
 		d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
 		h_pos = (int) (d/res);
-		atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+		// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+		atomicAdd(&d_histogram[h_pos], 1);
 	}
 	__syncthreads();
 }
@@ -243,17 +252,17 @@ double report_running_time_GPU() {
 /* 
 	print the counts in all buckets of the histogram 
 */
-void output_histogram(bucket* histogram){
+void output_histogram(unsigned long long* histogram){
 	int i; 
-	long long total_cnt = 0;
+	unsigned long long total_cnt = 0;
 	for(i=0; i< num_buckets; i++) {
 		if(i%5 == 0) /* we print 5 buckets in a row */
 			printf("\n%02d: ", i);
-		printf("%15lld ", histogram[i].d_cnt);
-		total_cnt += histogram[i].d_cnt;
+		printf("%15llu ", histogram[i]);//histogram[i].d_cnt);
+		total_cnt += histogram[i];//histogram[i].d_cnt;
 	  	/* we also want to make sure the total distance count is correct */
 		if(i == num_buckets - 1)	
-			printf("\n T:%lld \n", total_cnt);
+			printf("\n T:%llu \n", total_cnt);
 		else printf("| ");
 	}
 }
@@ -268,7 +277,7 @@ int main(int argc, char **argv)
 //printf("args are %d and %f\n", PDH_acnt, PDH_res);
 
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
-	histogram =       (bucket *)malloc(sizeof(bucket)*num_buckets);
+	histogram =    (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
 
 	// atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
 	atom_x_list = (double *)malloc(sizeof(double)*PDH_acnt);
@@ -304,7 +313,7 @@ int main(int argc, char **argv)
 
 	//cudaDeviceReset();
 	//gpu code--------------------------------------------------------------------------------
-	h_gpu_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	h_gpu_histogram = (unsigned long long *)malloc(sizeof(bucket)*num_buckets);
 
 	//copy the atomlist over from host to device
 	// cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
@@ -320,9 +329,9 @@ int main(int argc, char **argv)
 
 
 	//allocate the histogram data on the device
-	cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
-	cudaMemset(d_gpu_histogram, 0, sizeof(bucket)*num_buckets);
-	cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(bucket)*num_buckets,cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_gpu_histogram, sizeof(unsigned long long)*num_buckets);
+	cudaMemset(d_gpu_histogram, 0, sizeof(unsigned long long)*num_buckets);
+	cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(unsigned long long)*num_buckets,cudaMemcpyHostToDevice);
 
 	//start the timer
 	gettimeofday(&startTime, &Idunno);
@@ -333,12 +342,12 @@ int main(int argc, char **argv)
 
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
-	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount, BLOCK_SIZE);
+	PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	// PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
+	// (d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
-	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
+	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
 
 	//check total running time
 	report_running_time_GPU();
@@ -348,7 +357,7 @@ int main(int argc, char **argv)
 
 	//difference calculation--------------------------------------------------------------------------------
 	printf("Difference: \n");
-	diff_histogram = (bucket *)malloc(sizeof(bucket)*num_buckets);
+	diff_histogram = (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
 	int bi;
 	for(bi = 0; bi < num_buckets; bi++)
 	{
