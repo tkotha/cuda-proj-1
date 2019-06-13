@@ -313,7 +313,7 @@ int main(int argc, char **argv)
 
 	//cudaDeviceReset();
 	//gpu code--------------------------------------------------------------------------------
-	h_gpu_histogram = (unsigned long long *)malloc(sizeof(bucket)*num_buckets);
+	h_gpu_histogram = (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
 
 	//copy the atomlist over from host to device
 	// cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
