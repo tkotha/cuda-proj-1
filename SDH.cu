@@ -12,7 +12,7 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-#define BLOCK_COUNT 256 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
+#define BLOCK_SIZE 256 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 /* descriptors for single atom in the tree */
 typedef struct atomdesc {
 	double x_pos;
@@ -163,9 +163,9 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 	
 	//once we're sure this much is correct, we'll work out making it dynamically sizeable
 	//BLOCK_COUNT = 256
-	 __shared__ double xblock[BLOCK_COUNT];
-	 __shared__ double yblock[BLOCK_COUNT];
-	 __shared__ double zblock[BLOCK_COUNT];
+	 __shared__ double xblock[BLOCK_SIZE];
+	 __shared__ double yblock[BLOCK_SIZE];
+	 __shared__ double zblock[BLOCK_SIZE];
 	 
 	 //small debug logic
 	//interblock for loop, for the M value, use the grid's dimensions
@@ -330,13 +330,16 @@ int main(int argc, char **argv)
 
 	//start the timer
 	gettimeofday(&startTime, &Idunno);
-	int blockcount = BLOCK_COUNT;
+
+
+
+	int blockcount = ceil(PDH_acnt / (float) BLOCK_SIZE);
 
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
-	// PDH_kernel<<<ceil(PDH_acnt/((float)blockcount)), blockcount>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2<<<ceil(PDH_acnt/(((float)blockcount))), blockcount>>>
-	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
+	PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	// PDH_kernel2<<<blockcount, BLOCK_SIZE>>>
+	// (d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
