@@ -327,6 +327,7 @@ int main(int argc, char **argv)
 
 	//allocate the histogram data on the device
 	cudaMalloc((void**)&d_gpu_histogram, sizeof(bucket)*num_buckets);
+	cudaMemset(d_gpu_histogram, 0, sizeof(bucket)*num_buckets);
 	cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(bucket)*num_buckets,cudaMemcpyHostToDevice);
 
 	//start the timer
