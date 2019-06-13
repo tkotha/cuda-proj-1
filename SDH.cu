@@ -185,6 +185,7 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 			z2 = zblock[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int)(dist/res);
+			printf("hpos: %d",h_pos);
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 			
 		}
