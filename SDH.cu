@@ -176,16 +176,16 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
 							//the y array should be accessed by R[t + BLOCK_SIZE]	//or is it R[t*3 + 1]?
 							//the z array should be accessed by R[t + BLOCK_SIZE*2] //or is it R[t*3 + 2]?
-	#define RX(tid) R[tid]
-	#define RY(tid) R[tid + BLOCK_SIZE]
-	#define RZ(tid) R[tid + BLOCK_SIZE*2]
+	// #define RX(tid) R[tid]
+	// #define RY(tid) R[tid + BLOCK_SIZE]
+	// #define RZ(tid) R[tid + BLOCK_SIZE*2]
 
-	// #define RX(tid) R[tid*3 + 0]
-	// #define RY(tid) R[tid*3 + 1]
-	// #define RZ(tid) R[tid*3 + 2]
+	#define RX(tid) R[tid*3 + 0]
+	#define RY(tid) R[tid*3 + 1]
+	#define RZ(tid) R[tid*3 + 2]
 	
 	//make sure we are a valid atom in the array
-	// if(reg > acnt) return;
+	if(reg > acnt) return;
 
 
 	x1 = d_atom_x_list[reg];
@@ -355,8 +355,6 @@ int main(int argc, char **argv)
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
 	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount, BLOCK_SIZE);
-
-	checkCudaError(cudaGetLastError(), "Checking Last Error, Kernel Launch");
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
