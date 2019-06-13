@@ -177,6 +177,10 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	// #define RX(tid) R[tid*3 + 0]
 	// #define RY(tid) R[tid*3 + 1]
 	// #define RZ(tid) R[tid*3 + 2]
+	
+	//make sure we are a valid atom in the array
+	if(reg > acnt) return;
+
 
 	x1 = d_atom_x_list[reg];
 	y1 = d_atom_y_list[reg];
