@@ -31,12 +31,12 @@
 // bucket * h_gpu_histogram;
 // bucket * d_gpu_histogram;
 // bucket * diff_histogram;
-void checkCudaError(cudaError_t e, char in[]) {
-	if (e != cudaSuccess) {
-		printf("CUDA Error: %s, %s \n", in, cudaGetErrorString(e));
-		exit(EXIT_FAILURE);
-	}
-}
+// void checkCudaError(cudaError_t e, char in[]) {
+// 	if (e != cudaSuccess) {
+// 		printf("CUDA Error: %s, %s \n", in, cudaGetErrorString(e));
+// 		exit(EXIT_FAILURE);
+// 	}
+// }
 
 unsigned long long * histogram;
 unsigned long long * h_gpu_histogram;
@@ -397,7 +397,7 @@ int main(int argc, char **argv)
 	free(h_gpu_histogram);
 	free(diff_histogram); 
 
-	checkCudaError(cudaDeviceReset(), "Device reset");
+	// checkCudaError(cudaDeviceReset(), "Device reset");
 
 	return 0;
 }
