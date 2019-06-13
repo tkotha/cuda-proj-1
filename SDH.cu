@@ -49,6 +49,7 @@ double * d_atom_x_list;
 double * d_atom_y_list;
 double * d_atom_z_list;
 
+
 /* These are for an old way of tracking time */
 struct timezone Idunno;	
 struct timeval startTime, endTime;
@@ -144,7 +145,7 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 	step 2: get histogram privitization to work
 */
 
-__global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res)
+__global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res, int blockcount)
 {
 	//our location in the global atom list
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
@@ -157,25 +158,30 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	int i, j, h_pos;
 	double dist;
 
-	//our single block tile for handling the nested loop
-	__shared__ double r_block_x[blockDim.x];
-	__shared__ double r_block_y[blockDim.x];
-	__shared__ double r_block_z[blockDim.x];
+	//our single block tile for handling the nested loop... wait how do we do this at runtime?
+	// __shared__ double r_block_x[blockDim.x];
+	// __shared__ double r_block_y[blockDim.x];
+	// __shared__ double r_block_z[blockDim.x];
 
+	extern __shared__ double r_block[];
+
+	double *xblock = r_block;
+	double *yblock = &x_block[blockcount];
+	double *zblock = &y_block[blockcount];
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < gridDim.x; i++)
 	{
-		r_block_x[threadIdx.x] = d_atom_x_list[blockDim.x*i + threadIdx.x];
-		r_block_y[threadIdx.x] = d_atom_y_list[blockDim.x*i + threadIdx.x];
-		r_block_z[threadIdx.x] = d_atom_z_list[blockDim.x*i + threadIdx.x];
+		xblock[threadIdx.x] = d_atom_x_list[blockDim.x*i + threadIdx.x];
+		yblock[threadIdx.x] = d_atom_y_list[blockDim.x*i + threadIdx.x];
+		zblock[threadIdx.x] = d_atom_z_list[blockDim.x*i + threadIdx.x];
 
 		__syncthreads();
 		for(j = 0; j < blockDim.x; j++)
 		{
 			//this func
-			x2 = r_block_x[j];
-			y2 = r_block_y[j];
-			z2 = r_block_z[j];
+			x2 = xblock[j];
+			y2 = yblock[j];
+			z2 = zblock[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			//atomic add
 			h_pos = (int)(dist/res);
@@ -184,17 +190,17 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	}
 
 	//intrablock for loop
-	r_block_x[threadIdx.x] = d_atom_x_list[id];
-	r_block_x[threadIdx.x] = d_atom_x_list[id];
-	r_block_y[threadIdx.x] = d_atom_y_list[id];
+	xblock[threadIdx.x] = d_atom_x_list[id];
+	yblock[threadIdx.x] = d_atom_x_list[id];
+	zblock[threadIdx.x] = d_atom_y_list[id];
 
 	__syncthreads();
 	for(i = threadIdx.x +1; i < blockDim.x; i++)
 	{
 		//this func
-		x2 = r_block_x[j];
-		y2 = r_block_y[j];
-		z2 = r_block_z[j];
+		x2 = xblock[j];
+		y2 = yblock[j];
+		z2 = zblock[j];
 		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 		//atomic add
 		h_pos = (int)(dist/res);
@@ -323,7 +329,8 @@ int main(int argc, char **argv)
 	//run the kernel
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, );
+	int blockcount = 256;
+	PDH_kernel2<<<ceil(PDH_acnt/((float) blockcount)), blockcount, 3*blockcount*sizeof(double)>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
