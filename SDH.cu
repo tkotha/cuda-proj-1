@@ -174,6 +174,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	double x1, y1, z1;
 	double x2, y2, z2;
 	double d;
+	int limit;
 	extern __shared__ double R[];	//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory
 							//where t is a specific index into the 'atom' array
 							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
@@ -193,17 +194,17 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = b+1; i < M; i++)
 	{
-		// if(t + i*B < acnt)
+		if( ((long long)t + (long long)i*(long long)B) < acnt)
 		{
 			R[t + BLOCK_SIZE*0] = d_atom_x_list[t + i*B];
 			R[t + BLOCK_SIZE*1] = d_atom_y_list[t + i*B];
 			R[t + BLOCK_SIZE*2] = d_atom_z_list[t + i*B];
-		
+			
 			__syncthreads();
 
 			for(j = 0; j < B; j++)
 			{
-				// if(j + i*B < acnt)
+				if(((long long)j + (long long)i*(long long)B) < acnt)
 				{
 					x2 = R[j + BLOCK_SIZE*0];
 					y2 = R[j + BLOCK_SIZE*1];
@@ -227,7 +228,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = t+1; i < B; i++)
 	{
-		if( i + b*B < acnt)
+		if(((long long)i + (long long)b*(long long)B) < acnt)
 		{
 			x2 = R[i + BLOCK_SIZE*0];
 			y2 = R[i + BLOCK_SIZE*1];
