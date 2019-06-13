@@ -163,13 +163,13 @@ __global__ void PDH_kernel2(bucket* d_histogram,
 							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
 							//the y array should be accessed by R[t + BLOCK_SIZE]	//or is it R[t*3 + 1]?
 							//the z array should be accessed by R[t + BLOCK_SIZE*2] //or is it R[t*3 + 2]?
-	#define RX(tid) R[tid]
-	#define RY(tid) R[tid + BLOCK_SIZE]
-	#define RZ(tid) R[tid + BLOCK_SIZE*2]
+	// #define RX(tid) R[tid]
+	// #define RY(tid) R[tid + BLOCK_SIZE]
+	// #define RZ(tid) R[tid + BLOCK_SIZE*2]
 
-	// #define RX(tid) R[tid*3 + 0]
-	// #define RY(tid) R[tid*3 + 1]
-	// #define RZ(tid) R[tid*3 + 2]
+	#define RX(tid) R[tid*3 + 0]
+	#define RY(tid) R[tid*3 + 1]
+	#define RZ(tid) R[tid*3 + 2]
 
 	x1 = d_atom_x_list[reg];
 	y1 = d_atom_y_list[reg];
