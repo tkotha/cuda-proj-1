@@ -145,7 +145,9 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 	step 2: get histogram privitization to work
 */
 
-__global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, long long acnt, double res, int blockcount)
+__global__ void PDH_kernel2(bucket* d_histogram, 
+							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							long long acnt, double res, int blockcount)
 {
 	//our location in the global atom list
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
@@ -158,33 +160,14 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 	int i, j, h_pos;
 	double dist;
 
-	//our single block tile for handling the nested loop... wait how do we do this at runtime?
-	// __shared__ double r_block_x[blockDim.x];
-	// __shared__ double r_block_y[blockDim.x];
-	// __shared__ double r_block_z[blockDim.x];
-
-	//here's the plan, we're just going to use this guy directly!
-	//all we have to do is 'access' the correct portions of shared mem
-	//so, threadid + blockdim*<axes>
-	//where axes is 0=x, 1 = y, and z = 2
-	//...
-	//ok, for right now, just to see if the basic code even works, we'll keep to a static block size
-	//say 256
+	
 	//once we're sure this much is correct, we'll work out making it dynamically sizeable
+	//BLOCK_COUNT = 256
 	 __shared__ double xblock[BLOCK_COUNT];
 	 __shared__ double yblock[BLOCK_COUNT];
 	 __shared__ double zblock[BLOCK_COUNT];
-	 // double *xblock = r_block;
-	 // double *yblock = (double*)&xblock[BLOCK_COUNT];
-	 // double *zblock = (double*)&yblock[BLOCK_COUNT];
-
+	 
 	 //small debug logic
-	 if(threadIdx.x == 0 && blockIdx.x == 0)
-	 {
-		printf("BLOCK COUNT: %d\n", BLOCK_COUNT);
-		printf("GRID SIZE: %d\n", gridDim.x);
-	 }
-	
 	//interblock for loop, for the M value, use the grid's dimensions
 	for(i = blockIdx.x+1; i < gridDim.x; i++)
 	{
@@ -201,19 +184,11 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 			y2 = yblock[j];
 			z2 = zblock[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
-			// if(threadIdx.x == 0)
-			// {
-			// 	printf("dist: %d\n", dist);
-			// }
-			//atomic add
 			h_pos = (int)(dist/res);
-			if(threadIdx.x == 0)
-			{
-				printf("hpos: %d\n", h_pos);
-			}
-			unsigned long long test = atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
-			printf("histbucket: %llu", test);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			
 		}
+		__syncthreads();
 	}
 
 	//intrablock for loop
