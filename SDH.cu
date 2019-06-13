@@ -194,21 +194,25 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = b+1; i < M; i++)
 	{
-		R[t + BLOCK_SIZE*0] = d_atom_x_list[t + i*B];
-		R[t + BLOCK_SIZE*1] = d_atom_y_list[t + i*B];
-		R[t + BLOCK_SIZE*2] = d_atom_z_list[t + i*B];
-		__syncthreads();
-
-		for(j = 0; j < B; j++)
+		if(t + i*B < acnt)
 		{
-			x2 = RX(j);
-			y2 = RY(j);
-			z2 = RZ(j);
-			d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
-			h_pos = (int) (d/res);
-			// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
-			atomicAdd(&d_histogram[h_pos], 1);
+			R[t + BLOCK_SIZE*0] = d_atom_x_list[t + i*B];
+			R[t + BLOCK_SIZE*1] = d_atom_y_list[t + i*B];
+			R[t + BLOCK_SIZE*2] = d_atom_z_list[t + i*B];
+			__syncthreads();
+
+			for(j = 0; j < B; j++)
+			{
+				x2 = R[j + BLOCK_SIZE*0];
+				y2 = R[j + BLOCK_SIZE*1];
+				z2 = R[j + BLOCK_SIZE*2];
+				d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
+				h_pos = (int) (d/res);
+				// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+				atomicAdd(&d_histogram[h_pos], 1);
+			}
 		}
+		
 	}
 	__syncthreads();
 
@@ -219,13 +223,16 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 	for(i = t+1; i < B; i++)
 	{
-		x2 = RX(i);
-		y2 = RY(i);
-		z2 = RZ(i);
-		d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
-		h_pos = (int) (d/res);
-		// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
-		atomicAdd(&d_histogram[h_pos], 1);
+		if( i + b*B < acnt)
+		{
+			x2 = R[i + BLOCK_SIZE*0];
+			y2 = R[i + BLOCK_SIZE*1];
+			z2 = R[i + BLOCK_SIZE*2];
+			d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
+			h_pos = (int) (d/res);
+			// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+			atomicAdd(&d_histogram[h_pos], 1);
+		}
 	}
 	__syncthreads();
 }
