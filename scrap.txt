@@ -1,0 +1,69 @@
+__global__ void PDH_kernel2(bucket* d_histogram, 
+							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							long long acnt, double res, int M)
+{
+	//our location in the global atom list
+	int id = blockIdx.x*blockDim.x + threadIdx.x;
+
+	//load our single data point
+	double x1 = d_atom_x_list[id];
+	double y1 = d_atom_y_list[id];
+	double z1 = d_atom_z_list[id];
+	double x2,y2,z2;
+	int i, j, h_pos;
+	double dist;
+
+	
+	//once we're sure this much is correct, we'll work out making it dynamically sizeable
+	//BLOCK_COUNT = 256
+	//to access the x(0) component, the y(1) component, and the z(2) component, do tid + blockdim*axes
+	extern __shared__ double Rblock[];
+	 
+	 //small debug logic
+	//interblock for loop, for the M value, use the grid's dimensions
+	for(i = blockIdx.x+1; i < M; i++)
+	{
+
+		Rblock[threadIdx.x] = 	                d_atom_x_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x + BLOCK_SIZE] = 	    d_atom_y_list[blockDim.x*i + threadIdx.x];
+		Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
+
+		__syncthreads();
+		for(j = 0; j < blockDim.x; j++)
+		{
+			//this func
+			x2 = Rblock[j];
+			y2 = Rblock[j + BLOCK_SIZE];
+			z2 = Rblock[j + BLOCK_SIZE*2];
+			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			h_pos = (int)(dist/res);
+			// if(threadIdx.x == 0)
+			// 	printf("hpos: %d",h_pos);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			
+		}
+		__syncthreads();
+	}
+
+	//intrablock for loop
+	Rblock[threadIdx.x] = 	d_atom_x_list[id];
+	Rblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[id];
+	Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[id];
+
+	__syncthreads();
+	for(i = threadIdx.x +1; i < blockDim.x; i++)
+	{
+		//this func
+		x2 = Rblock[j];
+		y2 = Rblock[j +BLOCK_SIZE];
+		z2 = Rblock[j +BLOCK_SIZE*2];
+		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+		//atomic add
+		h_pos = (int)(dist/res);
+		atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+	}
+
+
+	//write output back to histogram... not yet! we havent gotten to the privatized histogram yet!
+	//__syncthreads();
+}

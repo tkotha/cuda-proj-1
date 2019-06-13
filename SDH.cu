@@ -23,7 +23,7 @@ typedef struct atomdesc {
 typedef struct hist_entry{
 	//float min;
 	//float max;
-	long long d_cnt;   /* need a long long type as the count might be huge */
+	unsigned long long d_cnt;   /* need a long long type as the count might be huge */
 } bucket;
 
 
@@ -147,72 +147,68 @@ __global__ void PDH_kernel(bucket* d_histogram, double* d_atom_x_list, double* d
 
 __global__ void PDH_kernel2(bucket* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
-							long long acnt, double res, int M)
+							long long acnt, double res, int M, int B)
 {
-	//our location in the global atom list
-	int id = blockIdx.x*blockDim.x + threadIdx.x;
-
-	//load our single data point
-	double x1 = d_atom_x_list[id];
-	double y1 = d_atom_y_list[id];
-	double z1 = d_atom_z_list[id];
-	double x2,y2,z2;
+	//M = Grid Size = total number of blocks
+	//B = Block Size
+	int t = threadIdx.x;
+	int b = blockIdx.x;
+	int reg = t * B*b;
 	int i, j, h_pos;
-	double dist;
+	double x1, y1, z1;
+	double x2, y2, z2;
+	double d;
+	extern __shared__ R[];	//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory
+							//where t is a specific index into the 'atom' array
+							//the x array should be accessed by R[t]				//or is it R[t*3 + 0]?
+							//the y array should be accessed by R[t + BLOCK_SIZE]	//or is it R[t*3 + 1]?
+							//the z array should be accessed by R[t + BLOCK_SIZE*2] //or is it R[t*3 + 2]?
+	#define RX(tid) R[tid]
+	#define RY(tid) R[tid + BLOCK_SIZE]
+	#define RZ(tid) R[tid + BLOCK_SIZE*2]
 
-	
-	//once we're sure this much is correct, we'll work out making it dynamically sizeable
-	//BLOCK_COUNT = 256
-	//to access the x(0) component, the y(1) component, and the z(2) component, do tid + blockdim*axes
-	extern __shared__ double Rblock[];
-	 
-	 //small debug logic
-	//interblock for loop, for the M value, use the grid's dimensions
-	for(i = blockIdx.x+1; i < M; i++)
+	// #define RX(tid) R[tid*3 + 0]
+	// #define RY(tid) R[tid*3 + 1]
+	// #define RZ(tid) R[tid*3 + 2]
+
+	x1 = d_atom_x_list[reg];
+	y1 = d_atom_y_list[reg];
+	z1 = d_atom_z_list[reg];
+
+	for(i = b+1; i < M; i++)
 	{
-
-		Rblock[threadIdx.x] = 	                d_atom_x_list[blockDim.x*i + threadIdx.x];
-		Rblock[threadIdx.x + BLOCK_SIZE] = 	    d_atom_y_list[blockDim.x*i + threadIdx.x];
-		Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[blockDim.x*i + threadIdx.x];
-
+		RX(t) = d_atom_x_list[t + i*B];
+		RY(t) = d_atom_y_list[t + i*B];
+		RZ(t) = d_atom_z_list[t + i*B];
 		__syncthreads();
-		for(j = 0; j < blockDim.x; j++)
+
+		for(j = 0; j < B; j++)
 		{
-			//this func
-			x2 = Rblock[j];
-			y2 = Rblock[j + BLOCK_SIZE];
-			z2 = Rblock[j + BLOCK_SIZE*2];
-			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
-			h_pos = (int)(dist/res);
-			// if(threadIdx.x == 0)
-			// 	printf("hpos: %d",h_pos);
-			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
-			
+			x2 = RX(j);
+			y2 = RY(j);
+			z2 = RZ(j);
+			d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
+			h_pos = (int) (d/res);
+			atomicAdd(&d_histogram[h_pos].d_cnt, 1);
 		}
-		__syncthreads();
 	}
-
-	//intrablock for loop
-	Rblock[threadIdx.x] = 	d_atom_x_list[id];
-	Rblock[threadIdx.x + BLOCK_SIZE] = 	d_atom_y_list[id];
-	Rblock[threadIdx.x + BLOCK_SIZE*2] = 	d_atom_z_list[id];
-
 	__syncthreads();
-	for(i = threadIdx.x +1; i < blockDim.x; i++)
+
+	RX(t) = d_atom_x_list[reg];
+	RY(t) = d_atom_y_list[reg];
+	RZ(t) = d_atom_z_list[reg];
+	__syncthreads();
+
+	for(i = t+1; i < B; i++)
 	{
-		//this func
-		x2 = Rblock[j];
-		y2 = Rblock[j +BLOCK_SIZE];
-		z2 = Rblock[j +BLOCK_SIZE*2];
-		dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
-		//atomic add
-		h_pos = (int)(dist/res);
-		atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+		x2 = RX(i);
+		y2 = RY(i);
+		z2 = RZ(i);
+		d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
+		h_pos = (int) (d/res);
+		atomicAdd(&d_histogram[h_pos].d_cnt, 1);
 	}
-
-
-	//write output back to histogram... not yet! we havent gotten to the privatized histogram yet!
-	//__syncthreads();
+	__syncthreads();
 }
 
 /* 
@@ -339,7 +335,7 @@ int main(int argc, char **argv)
 	// PDH_kernel<<<ceil(PDH_acnt/256.0), 256>>>(d_gpu_histogram, d_atom_list, PDH_acnt, PDH_res);
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
-	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount);
+	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(bucket)*num_buckets, cudaMemcpyDeviceToHost);
