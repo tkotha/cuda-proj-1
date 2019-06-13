@@ -201,12 +201,16 @@ __global__ void PDH_kernel2(bucket* d_histogram, double* d_atom_x_list, double* 
 			y2 = yblock[j];
 			z2 = zblock[j];
 			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
-			if(threadIdx.x == 0)
-			{
-				printf("dist: %d\n", dist);
-			}
+			// if(threadIdx.x == 0)
+			// {
+			// 	printf("dist: %d\n", dist);
+			// }
 			//atomic add
 			h_pos = (int)(dist/res);
+			if(threadIdx.x == 0)
+			{
+				printf("hpos: %d\n", h_pos);
+			}
 			atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 		}
 	}
