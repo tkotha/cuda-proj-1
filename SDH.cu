@@ -185,7 +185,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	// #define RZ(tid) R[tid*3 + 2]
 	
 	//make sure we are a valid atom in the array
-	if(reg > acnt) return;
+	if(reg < acnt) return;
 
 
 	x1 = d_atom_x_list[reg];
@@ -203,13 +203,16 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 			for(j = 0; j < B; j++)
 			{
-				x2 = R[j + BLOCK_SIZE*0];
-				y2 = R[j + BLOCK_SIZE*1];
-				z2 = R[j + BLOCK_SIZE*2];
-				d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
-				h_pos = (int) (d/res);
-				// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
-				atomicAdd(&d_histogram[h_pos], 1);
+				if(j + i*B < acnt)
+				{
+					x2 = R[j + BLOCK_SIZE*0];
+					y2 = R[j + BLOCK_SIZE*1];
+					z2 = R[j + BLOCK_SIZE*2];
+					d = sqrt((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2) + (z1-z2)*(z1-z2));
+					h_pos = (int) (d/res);
+					// atomicAdd(&d_histogram[h_pos].d_cnt, 1);
+					atomicAdd(&d_histogram[h_pos], 1);
+				}
 			}
 		}
 		
