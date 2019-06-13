@@ -31,6 +31,12 @@
 // bucket * h_gpu_histogram;
 // bucket * d_gpu_histogram;
 // bucket * diff_histogram;
+void checkCudaError(cudaError_t e, char in[]) {
+	if (e != cudaSuccess) {
+		printf("CUDA Error: %s, %s \n", in, cudaGetErrorString(e));
+		exit(EXIT_FAILURE);
+	}
+}
 
 unsigned long long * histogram;
 unsigned long long * h_gpu_histogram;
@@ -350,6 +356,8 @@ int main(int argc, char **argv)
 	PDH_kernel2<<<blockcount, BLOCK_SIZE, BLOCK_SIZE*3*sizeof(double)>>>
 	(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res, blockcount, BLOCK_SIZE);
 
+	checkCudaError(cudaGetLastError(), "Checking Last Error, Kernel Launch");
+
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
 
@@ -383,6 +391,8 @@ int main(int argc, char **argv)
 	free(atom_z_list);
 	free(h_gpu_histogram);
 	free(diff_histogram); 
+
+	checkCudaError(cudaDeviceReset(), "Device reset");
 
 	return 0;
 }
