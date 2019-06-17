@@ -218,7 +218,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 					//place into histogram
 					h_pos = (int)(dist/res);
-					atomicAdd(&d_histogram[h_pos], 1);
+					atomicAdd((unsigned long long int*)&d_histogram[h_pos], 1);
 				}
 			}
 		}
@@ -240,11 +240,35 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 
 			//place into histogram
 			h_pos = (int)(dist/res);
-			atomicAdd(&d_histogram[h_pos], 1);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos], 1);
 		}
 	}
 }
 
+
+__global__ void PDH_kernel3(unsigned long long* d_histogram, 
+							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							long long acnt, double res,
+							 int numBlocks, int blockSize)
+{
+	extern __shared__ double R[];	
+							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
+							//where t is a specific index into the 'atom' array
+							//
+							//the rth x array should be accessed by LR[t + 3*BLOCK_SIZE]				
+							//the rth y array should be accessed by LR[t + BLOCK_SIZE + 3*BLOCK_SIZE]	
+							//the rth z array should be accessed by LR[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	int i, j, h_pos;
+	int i_id;
+	int t = threadIdx.x;
+	double x1, y1, z1, x2, y2, z2;
+	double dist;
+	if(id < acnt)
+	{
+
+	}
+}
 /* 
 	set a checkpoint and show the (natural) running time in seconds 
 */
@@ -367,12 +391,12 @@ int main(int argc, char **argv)
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 	PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
-	(d_gpu_histogram, 
-		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		PDH_acnt, PDH_res,
+		(d_gpu_histogram, 
+		 d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		 PDH_acnt, PDH_res,
 		 blockcount, BLOCK_SIZE);
 
-	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //now we try and use just R
+	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
 	// (d_gpu_histogram, 
 	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 	// 	PDH_acnt, PDH_res,
