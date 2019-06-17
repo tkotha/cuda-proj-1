@@ -230,7 +230,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;	
-	unsigned long long * sh_hist = (unsigned long long *)R[3*blockSize];
+	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockSize*sizeof(double));
 							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
 							//where t is a specific index into the 'atom' array
 							//
