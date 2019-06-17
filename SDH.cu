@@ -451,6 +451,7 @@ int main(int argc, char **argv)
 		PDH_acnt, PDH_res,
 		 blockcount, BLOCK_SIZE);
 
+
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
 
