@@ -198,7 +198,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				//clearing the R at those poitns to 0 doesnt solve it either
 				//you have to omit those calculations entirely 
 				{
-					j_id = i * blockDim.x + j;	//currently this cuts out too many calculations
+					j_id = i * blockDim.x + j+1;	//currently this cuts out too many calculations
 					if(j_id < acnt)
 					{
 						Rx = R[j];
