@@ -224,14 +224,18 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 
 //now we try to get privatized histogram working. at the moment accuracy is the same as kernel 3. So, for now, the goal is to maintain this accuracy
 //while getting privitization to work. Ofc, it should be mentioned that without privitization, this just gives us nothing.
+//if we achieve this, then correcting the code in kernel 3 should transparently work with kernel 4. Ie, there should be nothing we
+//introduce here that affects accuracy assuming we correct the original histogram computation
 __global__ void PDH_kernel4(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res,
-							 int numBlocks, int blockSize)
+							 int numBlocks, int blockSize, int histSize)
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;	
 	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockSize*sizeof(double));
+
+
 							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
 							//where t is a specific index into the 'atom' array
 							//
@@ -244,6 +248,12 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int t = threadIdx.x;
 	double  Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
+	//initialize the shared histogram to 0. just use thread id directly for this one
+	for(i = t; i < histSize; i+= blockSize)
+	{
+		sh_hist[i] = 0;
+	}
+	__syncthreads();
 	if(id < acnt)
 	{
 		Lx = d_atom_x_list[id];
@@ -291,6 +301,11 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 		__syncthreads();
 		//now to write to the global histogram...somehow. probably requires reduction
+		//instead, use the strategy you used for initializing the shared histogram to iterate over the histogram
+		for(i = t; i < histSize; i += blockSize)
+		{
+			atomicAdd(&d_histogram[i], sh_hist[i]);
+		}
 	}
 }
 
@@ -424,17 +439,17 @@ int main(int argc, char **argv)
 	// 	 PDH_acnt, PDH_res,
 	// 	 blockcount, BLOCK_SIZE);
 
-	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
-	(d_gpu_histogram, 
-		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		PDH_acnt, PDH_res,
-		 blockcount, BLOCK_SIZE);
-
-	// PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try to privatize the histogram
+	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
 	// (d_gpu_histogram, 
 	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 	// 	PDH_acnt, PDH_res,
 	// 	 blockcount, BLOCK_SIZE);
+
+	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try to privatize the histogram
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res,
+		 blockcount, BLOCK_SIZE, num_buckets);
 
 
 	//copy the histogram results back from gpu over to cpu
