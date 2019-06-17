@@ -428,8 +428,10 @@ int main(int argc, char **argv)
 
 
 
+	
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
-	int shmemsize = BLOCK_SIZE*3*sizeof(double) + sizeof(unsigned long long)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = BLOCK_SIZE*3*sizeof(double) + sizeof(unsigned long long)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize:  %d\n", shmemsize);
 	//run the kernel
@@ -441,13 +443,13 @@ int main(int argc, char **argv)
 	// 	 PDH_acnt, PDH_res,
 	// 	 blockcount, BLOCK_SIZE);
 
-	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
+	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res,
 		 blockcount, BLOCK_SIZE);
 
-	// PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try to privatize the histogram
+	// PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 	// (d_gpu_histogram, 
 	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 	// 	PDH_acnt, PDH_res,
