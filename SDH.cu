@@ -158,7 +158,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 
 //note: for right now, we are trying to make this kernel work for the 'ideal' case of 64 blocks, and 6400 points, leading to a 512 byte size block shared buffer per axis
 //      this means we are doing no bounds checking! once this works, add that back in!
-
+//   update: now this seems like its working. though there's more differences than I care for
 __global__ void PDH_kernel2(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res,
@@ -193,30 +193,33 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 		for(i = blockIdx.x + 1; i < numBlocks; i++)
 		{
 			i_id = i * blockDim.x + t;
-			LR[t + 3*blockSize] = 				d_atom_x_list[i_id];
-			LR[t + blockSize + 3*blockSize] = 	d_atom_y_list[i_id];
-			LR[t + blockSize*2 + 3*blockSize]=  d_atom_z_list[i_id];
-			__syncthreads();
-
-			for(j = 0; j < blockSize; j++)
+			if(i_id < acnt)
 			{
-				//grab L from shared memory
-				x1 = LR[t];
-				y1 = LR[t + blockSize];
-				z1 = LR[t + blockSize*2];
+				LR[t + 3*blockSize] = 				d_atom_x_list[i_id];
+				LR[t + blockSize + 3*blockSize] = 	d_atom_y_list[i_id];
+				LR[t + blockSize*2 + 3*blockSize]=  d_atom_z_list[i_id];
+				__syncthreads();
 
-				//grab R from shared memory
-				x2 = LR[t + 3*blockSize];
-				y2 = LR[t + blockSize + 3*blockSize];
-				z2 = LR[t + blockSize*2 + 3*blockSize];
+				for(j = 0; j < blockSize; j++)
+				{
+					//grab L from shared memory
+					x1 = LR[t];
+					y1 = LR[t + blockSize];
+					z1 = LR[t + blockSize*2];
 
-				//compute the distance
-				// dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
-				dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+					//grab R from shared memory
+					x2 = LR[t + 3*blockSize];
+					y2 = LR[t + blockSize + 3*blockSize];
+					z2 = LR[t + blockSize*2 + 3*blockSize];
 
-				//place into histogram
-				h_pos = (int)(dist/res);
-				atomicAdd(&d_histogram[h_pos], 1);
+					//compute the distance
+					// dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+					dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+
+					//place into histogram
+					h_pos = (int)(dist/res);
+					atomicAdd(&d_histogram[h_pos], 1);
+				}
 			}
 		}
 
@@ -363,7 +366,13 @@ int main(int argc, char **argv)
 	//run the kernel
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
+	// PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
+	// (d_gpu_histogram, 
+	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+	// 	PDH_acnt, PDH_res,
+	// 	 blockcount, BLOCK_SIZE);
+
+	PDH_kernel3 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //now we try and use just R
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res,
