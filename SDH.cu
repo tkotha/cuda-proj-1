@@ -158,6 +158,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 
 //note: when we go for correctness, this is the kernel we will work from. This way we have the best chance of finding the edge case easier
 //ok, so syncing threads made the 6400 point case correct, but we are still dead wrong with the 10000 point case for some reason
+//update: now the kernel is correct, and we match junyi's performance
 __global__ void PDH_kernel3(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res,
