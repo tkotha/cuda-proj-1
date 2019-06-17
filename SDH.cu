@@ -366,17 +366,17 @@ int main(int argc, char **argv)
 	//run the kernel
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	// PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
-	// (d_gpu_histogram, 
-	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res,
-	// 	 blockcount, BLOCK_SIZE);
-
-	PDH_kernel3 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //now we try and use just R
+	PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res,
 		 blockcount, BLOCK_SIZE);
+
+	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //now we try and use just R
+	// (d_gpu_histogram, 
+	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+	// 	PDH_acnt, PDH_res,
+	// 	 blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
