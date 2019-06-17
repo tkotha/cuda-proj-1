@@ -184,35 +184,35 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		for(i = blockIdx.x +1; i < numBlocks; i++)
 		{
 			i_id = i * blockDim.x + t;
-			if(i_id < acnt)	
+			if(i_id < acnt)					//here, we starve too many threads, and we lose valid computations because of it
 			{
 				R[t] 				= d_atom_x_list[i_id];
 				R[t + blockSize]	= d_atom_y_list[i_id];
 				R[t + blockSize*2]	= d_atom_z_list[i_id];
 				__syncthreads();
-
-				for(j = 0; j < blockSize; j++) 
-				//the edge case is in this inner loop.  
-				//when the ith block and last block do comparisons, if it is not a multiple of block size, 
-				//then the pair computations introduce junk data due to going out of bounds
-				//clearing the R at those poitns to 0 doesnt solve it either
-				//you have to omit those calculations entirely 
-				{
-					j_id = i * blockDim.x + j+1;	//currently this cuts out too many calculations
-					if(j_id < acnt)
-					{
-						Rx = R[j];
-						Ry = R[j + blockSize];
-						Rz = R[j + blockSize*2];
-
-						dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-
-						h_pos = (int)(dist/res);
-						atomicAdd(&d_histogram[h_pos], 1);
-					}
-				}
-				__syncthreads();
 			}
+			for(j = 0; j < blockSize; j++) 
+			//the edge case is in this inner loop.  
+			//when the ith block and last block do comparisons, if it is not a multiple of block size, 
+			//then the pair computations introduce junk data due to going out of bounds
+			//clearing the R at those poitns to 0 doesnt solve it either
+			//you have to omit those calculations entirely 
+			{
+				j_id = i * blockDim.x + j;	//now this prevents us from writing junk data
+				if(j_id < acnt)
+				{
+					Rx = R[j];
+					Ry = R[j + blockSize];
+					Rz = R[j + blockSize*2];
+
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+
+					h_pos = (int)(dist/res);
+					atomicAdd(&d_histogram[h_pos], 1);
+				}
+			}
+			__syncthreads();
+			
 		}
 
 		//now load the L values into R
