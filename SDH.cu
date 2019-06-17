@@ -115,6 +115,8 @@ int PDH_baseline() {
 	return 0;
 }
 
+
+
 /*
 	SDH kernel - a really crappy one
 */
@@ -156,12 +158,86 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 
 //note: for right now, we are trying to make this kernel work for the 'ideal' case of 64 blocks, and 6400 points, leading to a 512 byte size block shared buffer per axis
 //      this means we are doing no bounds checking! once this works, add that back in!
+
 __global__ void PDH_kernel2(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res,
-							 int M, int B)
+							 int numBlocks, int blockSize)
 {
-	
+	extern __shared__ double LR[];	
+							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory
+							//where t is a specific index into the 'atom' array
+							//
+							//the rth x array should be accessed by LR[t + 3*BLOCK_SIZE]				
+							//the rth y array should be accessed by LR[t + BLOCK_SIZE + 3*BLOCK_SIZE]	
+							//the rth z array should be accessed by LR[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
+							//the lth x array should be accessed by LR[t]
+							//the lth y array should be accessed by LR[t + BLOCK_SIZE]
+							//the lth z array should be accessed by LR[t + BLOCK_SIZE*2]
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	int i, j, h_pos;
+	int i_id;
+	int t = threadIdx.x;
+	double x1, y1, z1, x2, y2, z2;
+	double dist;
+	if(id < acnt)
+	{
+		// double Lx = d_atom_x_list;
+		// double Ly = d_atom_y_list;
+		// double Lz = d_atom_z_list;
+
+		LR[t] = d_atom_x_list[id];
+		LR[t + blockSize] = d_atom_y_list[id];
+		LR[t + blockSize*2] = d_atom_z_list[id];
+
+		for(i = blockIdx.x + 1; i < numBlocks; i++)
+		{
+			i_id = i * blockDim.x + t;
+			LR[t + 3*blockSize] = 				d_atom_x_list[i_id];
+			LR[t + blockSize + 3*blockSize] = 	d_atom_y_list[i_id];
+			LR[t + blockSize*2 + 3*blockSize]=  d_atom_z_list[i_id];
+			__syncthreads();
+
+			for(j = 0; j < blockSize; j++)
+			{
+				//grab L from shared memory
+				x1 = LR[t];
+				y1 = LR[t + blockSize];
+				z1 = LR[t + blockSize*2];
+
+				//grab R from shared memory
+				x2 = LR[t + 3*blockSize];
+				y2 = LR[t + blockSize + 3*blockSize];
+				z2 = LR[t + blockSize*2 + 3*blockSize];
+
+				//compute the distance
+				dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+
+				//place into histogram
+				h_pos = (int)(dist/res);
+				atomicAdd(&d_histogram[h_pos], 1);
+			}
+		}
+
+		for(i = t+1; i < blockSize; i++)
+		{
+			//now we just do L against L
+			x1 = LR[t];
+			y1 = LR[t + blockSize];
+			z1 = LR[t + blockSize*2];
+
+			x2 = LR[i];
+			y2 = LR[i + blockSize];
+			z2 = LR[i + blockSize*2];
+
+			//compute the distance
+			dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+
+			//place into histogram
+			h_pos = (int)(dist/res);
+			atomicAdd(&d_histogram[h_pos], 1);
+		}
+	}
 }
 
 /* 
@@ -284,12 +360,12 @@ int main(int argc, char **argv)
 	printf("shmemsize:  %d\n", shmemsize);
 	//run the kernel
 
-	PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	// PDH_kernel2<<<blockcount, BLOCK_SIZE, shmemsize>>>
-	// (d_gpu_histogram, 
-	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res,
-	// 	 blockcount, BLOCK_SIZE);
+	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+	PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res,
+		 blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
