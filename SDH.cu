@@ -211,7 +211,8 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 				z2 = LR[t + blockSize*2 + 3*blockSize];
 
 				//compute the distance
-				dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+				// dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+				dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 
 				//place into histogram
 				h_pos = (int)(dist/res);
@@ -231,7 +232,8 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 			z2 = LR[i + blockSize*2];
 
 			//compute the distance
-			dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+			// dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
+			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 
 			//place into histogram
 			h_pos = (int)(dist/res);
