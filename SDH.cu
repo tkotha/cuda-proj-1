@@ -222,7 +222,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	}
 }
 
-//now we try to get privatized histogram working
+//now we try to get privatized histogram working. at the moment accuracy is the same as kernel 3. So, for now, the goal is to maintain this accuracy
+//while getting privitization to work. Ofc, it should be mentioned that without privitization, this just gives us nothing.
 __global__ void PDH_kernel4(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res,
@@ -423,17 +424,17 @@ int main(int argc, char **argv)
 	// 	 PDH_acnt, PDH_res,
 	// 	 blockcount, BLOCK_SIZE);
 
-	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
-	// (d_gpu_histogram, 
-	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res,
-	// 	 blockcount, BLOCK_SIZE);
-
-	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try to privatize the histogram
+	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res,
 		 blockcount, BLOCK_SIZE);
+
+	// PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try to privatize the histogram
+	// (d_gpu_histogram, 
+	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+	// 	PDH_acnt, PDH_res,
+	// 	 blockcount, BLOCK_SIZE);
 
 
 	//copy the histogram results back from gpu over to cpu
