@@ -251,7 +251,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	//initialize the shared histogram to 0. just use thread id directly for this one
 	for(i = t; i < histSize; i+= blockSize)
 	{
-		sh_hist[i] = 0;
+		if(i < histSize)
+			sh_hist[i] = 0;
 	}
 	__syncthreads();
 	if(id < acnt)
@@ -304,7 +305,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 		//instead, use the strategy you used for initializing the shared histogram to iterate over the histogram
 		for(i = t; i < histSize; i += blockSize)
 		{
-			atomicAdd(&d_histogram[i], sh_hist[i]);
+			if(i < histSize)
+				atomicAdd(&d_histogram[i], sh_hist[i]);
 		}
 	}
 }
