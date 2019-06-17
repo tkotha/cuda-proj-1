@@ -266,13 +266,13 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id;
 	int t = threadIdx.x;
-	double x1, y1, z1, x2, y2, z2;
+	double  Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 	if(id < acnt)
 	{
-		double Lx = d_atom_x_list[id];
-		double Ly = d_atom_y_list[id];
-		double Lz = d_atom_z_list[id];
+		Lx = d_atom_x_list[id];
+		Ly = d_atom_y_list[id];
+		Lz = d_atom_z_list[id];
 		for(i = blockIdx.x +1; i < numBlocks; i++)
 		{
 			i_id = i * blockDim.x + t;
@@ -285,9 +285,32 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 
 				for(j = 0; j < blockSize; j++)
 				{
+					Rx = R[j];
+					Ry = R[j + blockSize];
+					Rz = R[j + blockSize*2];
 
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+
+					h_pos = (int)(dist/res);
+					atomicAdd((unsigned long long int*)&d_histogram[h_pos], 1);
 				}
 			}
+		}
+
+		//now load the L values into R
+		R[t] = Lx;
+		R[t + blockSize] = Ly;
+		R[t + blockSize*2] = Lz;
+		__syncthreads();
+		for(i = t+ 1; i < blockSize; i++)
+		{
+			Rx = R[i];
+			Ry = R[i + blockSize];
+			Rz = R[i + blockSize*2];
+			dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+
+			h_pos = (int)(dist/res);
+			atomicAdd((unsigned long long int*)&d_histogram[h_pos], 1);
 		}
 	}
 }
@@ -416,17 +439,17 @@ int main(int argc, char **argv)
 	//run the kernel
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
-		(d_gpu_histogram, 
-		 d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		 PDH_acnt, PDH_res,
-		 blockcount, BLOCK_SIZE);
-
-	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
-	// (d_gpu_histogram, 
-	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res,
+	// PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
+	// 	(d_gpu_histogram, 
+	// 	 d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+	// 	 PDH_acnt, PDH_res,
 	// 	 blockcount, BLOCK_SIZE);
+
+	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res,
+		 blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
