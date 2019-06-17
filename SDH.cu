@@ -222,6 +222,74 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	}
 }
 
+//now we try to get privatized histogram working
+__global__ void PDH_kernel4(unsigned long long* d_histogram, 
+							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							long long acnt, double res,
+							 int numBlocks, int blockSize)
+{
+	extern __shared__ double shmem[];
+	double* R = shmem;	
+	unsigned long long * sh_hist = (unsigned long long *)R[3*blockSize];
+							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
+							//where t is a specific index into the 'atom' array
+							//
+							//the rth x array should be accessed by R[t + 3*BLOCK_SIZE]				
+							//the rth y array should be accessed by R[t + BLOCK_SIZE + 3*BLOCK_SIZE]	
+							//the rth z array should be accessed by R[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
+	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	int i, j, h_pos;
+	int i_id;
+	int t = threadIdx.x;
+	double  Lx, Ly, Lz, Rx, Ry, Rz;
+	double dist;
+	if(id < acnt)
+	{
+		Lx = d_atom_x_list[id];
+		Ly = d_atom_y_list[id];
+		Lz = d_atom_z_list[id];
+		for(i = blockIdx.x +1; i < numBlocks; i++)
+		{
+			i_id = i * blockDim.x + t;
+			if(i_id < acnt)
+			{
+				R[t] 				= d_atom_x_list[i_id];
+				R[t + blockSize]	= d_atom_y_list[i_id];
+				R[t + blockSize*2]	= d_atom_z_list[i_id];
+				__syncthreads();
+
+				for(j = 0; j < blockSize; j++)
+				{
+					Rx = R[j];
+					Ry = R[j + blockSize];
+					Rz = R[j + blockSize*2];
+
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+
+					h_pos = (int)(dist/res);
+					atomicAdd(&d_histogram[h_pos], 1);
+				}
+			}
+		}
+
+		//now load the L values into R
+		R[t] = Lx;
+		R[t + blockSize] = Ly;
+		R[t + blockSize*2] = Lz;
+		__syncthreads();
+		for(i = t+ 1; i < blockSize; i++)
+		{
+			Rx = R[i];
+			Ry = R[i + blockSize];
+			Rz = R[i + blockSize*2];
+			dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+
+			h_pos = (int)(dist/res);
+			atomicAdd(&d_histogram[h_pos], 1);
+		}
+	}
+}
+
 
 
 
@@ -340,7 +408,7 @@ int main(int argc, char **argv)
 
 
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
-	int shmemsize = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize = BLOCK_SIZE*3*sizeof(double) + sizeof(unsigned long long)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize:  %d\n", shmemsize);
 	//run the kernel
