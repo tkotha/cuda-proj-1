@@ -156,7 +156,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 	step 2: get histogram privitization to work
 */
 
-
+//note: when we go for correctness, this is the kernel we will work from. This way we have the best chance of finding the edge case easier
 __global__ void PDH_kernel3(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
 							long long acnt, double res,
@@ -183,7 +183,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		for(i = blockIdx.x +1; i < numBlocks; i++)
 		{
 			i_id = i * blockDim.x + t;
-			if(i_id < acnt)
+			if(i_id < acnt)	//i suspect the edge case lies mainly in this check
 			{
 				R[t] 				= d_atom_x_list[i_id];
 				R[t + blockSize]	= d_atom_y_list[i_id];
@@ -267,7 +267,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 					h_pos = (int)(dist/res);
-					atomicAdd(&d_histogram[h_pos], 1);
+					atomicAdd(&sh_hist[h_pos], 1);
 				}
 			}
 		}
@@ -285,8 +285,11 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 			dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 			h_pos = (int)(dist/res);
-			atomicAdd(&d_histogram[h_pos], 1);
+			atomicAdd(&sh_hist[h_pos], 1);
 		}
+
+		__syncthreads();
+		//now to write to the global histogram...somehow. probably requires reduction
 	}
 }
 
