@@ -228,13 +228,17 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		__syncthreads();
 		for(i = t+ 1; i < blockSize; i++)
 		{
-			Rx = R[i];
-			Ry = R[i + blockSize];
-			Rz = R[i + blockSize*2];
-			dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+			i_id = blockIdx.x * blockDim.x + i;
+			if(i_id < acnt)
+			{
+				Rx = R[i];
+				Ry = R[i + blockSize];
+				Rz = R[i + blockSize*2];
+				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
-			h_pos = (int)(dist/res);
-			atomicAdd(&d_histogram[h_pos], 1);
+				h_pos = (int)(dist/res);
+				atomicAdd(&d_histogram[h_pos], 1);	
+			}
 		}
 	}
 }
