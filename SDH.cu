@@ -190,12 +190,12 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				R[t + blockSize]	= d_atom_y_list[i_id];
 				R[t + blockSize*2]	= d_atom_z_list[i_id];
 			}
-			else
-			{
-				R[t] 				= 0.0;
-				R[t + blockSize]	= 0.0;
-				R[t + blockSize*2]	= 0.0;	
-			}
+			// else
+			// {
+			// 	R[t] 				= 0.0;
+			// 	R[t + blockSize]	= 0.0;
+			// 	R[t + blockSize*2]	= 0.0;	
+			// }
 			__syncthreads();
 			for(j = 0; j < blockSize; j++) 
 			//the edge case is in this inner loop.  
