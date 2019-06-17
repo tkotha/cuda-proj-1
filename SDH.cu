@@ -270,9 +270,9 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	double dist;
 	if(id < acnt)
 	{
-		double Lx = d_atom_x_list;
-		double Ly = d_atom_y_list;
-		double Lz = d_atom_z_list;
+		double Lx = d_atom_x_list[id];
+		double Ly = d_atom_y_list[id];
+		double Lz = d_atom_z_list[id];
 		for(i = blockIdx.x +1; i < numBlocks; i++)
 		{
 			i_id = i * blockDim.x + t;
