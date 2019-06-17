@@ -189,8 +189,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				R[t] 				= d_atom_x_list[i_id];
 				R[t + blockSize]	= d_atom_y_list[i_id];
 				R[t + blockSize*2]	= d_atom_z_list[i_id];
-				__syncthreads();
 			}
+				__syncthreads();
 			for(j = 0; j < blockSize; j++) 
 			//the edge case is in this inner loop.  
 			//when the ith block and last block do comparisons, if it is not a multiple of block size, 
