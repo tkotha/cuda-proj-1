@@ -182,9 +182,6 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	double dist;
 	if(id < acnt)
 	{
-		// double Lx = d_atom_x_list;
-		// double Ly = d_atom_y_list;
-		// double Lz = d_atom_z_list;
 
 		LR[t] = d_atom_x_list[id];
 		LR[t + blockSize] = d_atom_y_list[id];
@@ -193,6 +190,13 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 		for(i = blockIdx.x + 1; i < numBlocks; i++)
 		{
 			i_id = i * blockDim.x + t;
+			//although this is more accurate than before, I am likely not handling the case
+			//where there is 'some of a valid block'
+			//that is, once again, edge cases are creeping in to prevent me from performing p2pdist on ALL possible points
+			//because i_id can only check at the block and thread level, i dont have a way to be more granular here
+			//this means the inner for loop probably cannot run for all possible points
+			//for the most part, this is much closer than before, so we'll keep continuing with the optimizing
+			//and then we will come back to make this fully correct
 			if(i_id < acnt)
 			{
 				LR[t + 3*blockSize] = 				d_atom_x_list[i_id];
@@ -208,9 +212,9 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 					z1 = LR[t + blockSize*2];
 
 					//grab R from shared memory
-					x2 = LR[t + 3*blockSize];
-					y2 = LR[t + blockSize + 3*blockSize];
-					z2 = LR[t + blockSize*2 + 3*blockSize];
+					x2 = LR[j + 3*blockSize];
+					y2 = LR[j + blockSize + 3*blockSize];
+					z2 = LR[j + blockSize*2 + 3*blockSize];
 
 					//compute the distance
 					// dist = sqrt(pow(x1 - x2, 2.0) + pow(y1-y2, 2.0) + pow(z1-z2, 2.0));
@@ -255,9 +259,9 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
 							//where t is a specific index into the 'atom' array
 							//
-							//the rth x array should be accessed by LR[t + 3*BLOCK_SIZE]				
-							//the rth y array should be accessed by LR[t + BLOCK_SIZE + 3*BLOCK_SIZE]	
-							//the rth z array should be accessed by LR[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
+							//the rth x array should be accessed by R[t + 3*BLOCK_SIZE]				
+							//the rth y array should be accessed by R[t + BLOCK_SIZE + 3*BLOCK_SIZE]	
+							//the rth z array should be accessed by R[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
 	int i_id;
@@ -266,9 +270,31 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	double dist;
 	if(id < acnt)
 	{
+		double Lx = d_atom_x_list;
+		double Ly = d_atom_y_list;
+		double Lz = d_atom_z_list;
+		for(i = blockIdx.x +1; i < numBlocks; i++)
+		{
+			i_id = i * blockDim.x + t;
+			if(i_id < acnt)
+			{
+				R[t] 				= d_atom_x_list[i_id];
+				R[t + blockSize]	= d_atom_y_list[i_id];
+				R[t + blockSize*2]	= d_atom_z_list[i_id];
+				__syncthreads();
 
+				for(j = 0; j < blockSize; j++)
+				{
+
+				}
+			}
+		}
 	}
 }
+
+
+
+
 /* 
 	set a checkpoint and show the (natural) running time in seconds 
 */
@@ -390,17 +416,17 @@ int main(int argc, char **argv)
 	//run the kernel
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
-	PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
-		(d_gpu_histogram, 
-		 d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		 PDH_acnt, PDH_res,
-		 blockcount, BLOCK_SIZE);
-
-	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
-	// (d_gpu_histogram, 
-	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res,
+	// PDH_kernel2 <<<blockcount, BLOCK_SIZE, 2*shmemsize>>> //for now, we're allocating blocks for both L and R
+	// 	(d_gpu_histogram, 
+	// 	 d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+	// 	 PDH_acnt, PDH_res,
 	// 	 blockcount, BLOCK_SIZE);
+
+	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize>>> //now we try and use just R
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res,
+		 blockcount, BLOCK_SIZE);
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
@@ -440,7 +466,6 @@ int main(int argc, char **argv)
 	free(diff_histogram); 
 
 	cudaDeviceReset();
-	// checkCudaError(cudaDeviceReset(), "Device reset");
 
 	return 0;
 }
