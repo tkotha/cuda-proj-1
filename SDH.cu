@@ -389,7 +389,7 @@ double report_running_time() {
 		sec_diff --;
 		usec_diff += 1000000;
 	}
-	printf("Running time for CPU version: %ld.%06ld\n", sec_diff, usec_diff);
+	printf("Running time for CPU version: %ld.%06ld seconds\n", sec_diff, usec_diff);
 	return (double)(sec_diff*1.0 + usec_diff/1000000.0);
 }
 
