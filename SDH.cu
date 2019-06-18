@@ -182,7 +182,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		Lx = d_atom_x_list[id];
 		Ly = d_atom_y_list[id];
 		Lz = d_atom_z_list[id];
-		for(i = blockIdx.x +1; i < numBlocks; i++)
+		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
 			i_id = i * blockDim.x + t;
 			if(i_id < acnt)					//here, we starve too many threads, and we lose valid computations because of it
