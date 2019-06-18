@@ -171,17 +171,17 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 							//the rth x array should be accessed by R[t + 3*BLOCK_SIZE]				
 							//the rth y array should be accessed by R[t + BLOCK_SIZE + 3*BLOCK_SIZE]	
 							//the rth z array should be accessed by R[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
-	int id = blockIdx.x * blockDim.x + threadIdx.x;
+	int cur_id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
 	//int i_id, j_id;
-	int cur_id;
+	// int cur_id;
 	double  Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
 	double dist;
-	if(id < acnt)
+	if(cur_id < acnt)
 	{
-		Lx = d_atom_x_list[id];
-		Ly = d_atom_y_list[id];
-		Lz = d_atom_z_list[id];
+		Lx = d_atom_x_list[cur_id];
+		Ly = d_atom_y_list[cur_id];
+		Lz = d_atom_z_list[cur_id];
 		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
 			cur_id = i * blockDim.x + threadIdx.x;	//only valid threads may load into shared memory for block i
