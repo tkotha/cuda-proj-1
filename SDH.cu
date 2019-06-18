@@ -283,7 +283,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	extern __shared__ double shmem[];
 	double* R = shmem;
 	//2 copies of histogram, but we use one pointer
-	#define NUM_HISTS 2
+	// #define NUM_HISTS 2
 	int * sh_hist = (int *)(R + 3*blockDim.x);
 	//int * sh_hist2 = sh_hist1 + histSize;
 
@@ -291,7 +291,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
-	int laneid = t & 0x1f;
+	// int laneid = t & 0x1f;
 	double Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 
@@ -299,7 +299,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
-		sh_hist[i + histSize] = 0;
+		// sh_hist[i + histSize] = 0;
 	}
 	__syncthreads();
 
@@ -333,8 +333,9 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					h_pos = (int)(dist/res);
 
 
+					atomicAdd(&sh_hist[h_pos], 1);
 					// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
-					atomicAdd(&d_histogram[h_pos], 1);
+					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -358,9 +359,9 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 				h_pos = (int)(dist/res);
 
-
+				atomicAdd(&sh_hist[h_pos], 1);
 				// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
-				atomicAdd(&d_histogram[h_pos], 1);
+				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 		}
 	}
@@ -368,12 +369,12 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 
 	//now write back to output
-	// __syncthreads();
-	// for(i = t; i < histSize; i += blockDim.x)
-	// {
-	// 	atomicAdd(&d_histogram[i], sh_hist[i]);
-	// 	atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
-	// }
+	__syncthreads();
+	for(i = t; i < histSize; i += blockDim.x)
+	{
+		atomicAdd(&d_histogram[i], sh_hist[i]);
+		// atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
+	}
 
 }
 
@@ -513,7 +514,7 @@ int main(int argc, char **argv)
 	
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
-	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(unsigned long long)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
