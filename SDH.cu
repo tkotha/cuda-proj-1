@@ -516,7 +516,7 @@ int main(int argc, char **argv)
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
-	printf("numbuckets: %d\n", numbuckets);
+	printf("numbuckets: %d\n", num_buckets);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
 
