@@ -269,7 +269,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //now for histogram privitization
 //step 1: have it be correct -- apparently it's fine with multiples of block size, but it has very tiny difference with non multiples
 			//this smells like an edge case
-			//this small error is only introduced when i attempt to do the histogram priv portion
+			//this small error is only introduced when i attempt to do the histogram priv portion. it doesnt exist if i go back to writing in the global histogram
 			//doesnt seem to be an off by 1 error in terms of shared mem allocation
 //step 2: make sure it is actually faster than tiled
 //step 3: make simple optimizations, like reducing actual size of histogram to store multiple copies
@@ -369,8 +369,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	__syncthreads();
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		atomicAdd(&d_histogram[i], sh_hist[i]);
-		atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
+		atomicAdd(&d_histogram[i], sh_hist[histSize * (laneid % NUM_HISTS) + i]);
 	}
 
 }
