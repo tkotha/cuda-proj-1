@@ -242,17 +242,17 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 				dist = 0.0;
 				//Rx
-				Rt = Lx - R[j];
+				Rt = Lx - R[i];
 				Rt *= Rt;
 				dist += Rt;
 
 				//Ry
-				Rt = Ly - R[j + blockDim.x];
+				Rt = Ly - R[i + blockDim.x];
 				Rt *= Rt;
 				dist += Rt;
 
 				//Rz
-				Rt = Lz - R[j + blockDim.x*2];
+				Rt = Lz - R[i + blockDim.x*2];
 				Rt *= Rt;
 				dist += Rt;
 
