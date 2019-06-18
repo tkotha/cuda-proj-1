@@ -12,7 +12,7 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-#define BLOCK_SIZE 256 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
+#define BLOCK_SIZE 64 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -290,7 +290,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	double dist;
 
 	//initialize the shared histogram to 0
-	for(i = t; i < histSize; i += blockDim.x)
+	for(i = t; i <= histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
 	}
