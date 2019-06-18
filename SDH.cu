@@ -436,6 +436,7 @@ int main(int argc, char **argv)
 	}
 	PDH_acnt = atoi(argv[1]);
 	PDH_res	 = atof(argv[2]);
+	BLOCK_SIZE = atoi(argv[3]);
 //printf("args are %d and %f\n", PDH_acnt, PDH_res);
 
 	num_buckets = (int)(BOX_SIZE * 1.732 / PDH_res) + 1;
