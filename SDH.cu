@@ -458,17 +458,17 @@ int main(int argc, char **argv)
 	}
 	/* start counting time */
 
-	printf("Starting CPU...\n");
-	gettimeofday(&startTime, &Idunno);
+	// printf("Starting CPU...\n");
+	// gettimeofday(&startTime, &Idunno);
 	
-	 /*call CPU single thread version to compute the histogram */
-	PDH_baseline();
+	//  /*call CPU single thread version to compute the histogram */
+	// PDH_baseline();
 	
-	/* check the total running time */ 
-	report_running_time();
+	// /* check the total running time */ 
+	// report_running_time();
 	
-	/* print out the histogram */
-	output_histogram(histogram);
+	// /* print out the histogram */
+	// output_histogram(histogram);
 
 
 
@@ -550,21 +550,21 @@ int main(int argc, char **argv)
 	output_histogram(h_gpu_histogram);
 
 	//difference calculation--------------------------------------------------------------------------------
-	printf("Difference: \n");
-	diff_histogram = (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
-	int bi;
-	for(bi = 0; bi < num_buckets; bi++)
-	{
-		// diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
-		if(histogram[bi] > h_gpu_histogram[bi])
-			diff_histogram[bi] = histogram[bi] - h_gpu_histogram[bi];
-		else
-			diff_histogram[bi] = h_gpu_histogram[bi] - histogram[bi];
-	}
+	// printf("Difference: \n");
+	// diff_histogram = (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
+	// int bi;
+	// for(bi = 0; bi < num_buckets; bi++)
+	// {
+	// 	// diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
+	// 	if(histogram[bi] > h_gpu_histogram[bi])
+	// 		diff_histogram[bi] = histogram[bi] - h_gpu_histogram[bi];
+	// 	else
+	// 		diff_histogram[bi] = h_gpu_histogram[bi] - histogram[bi];
+	// }
 
 
 
-	output_histogram(diff_histogram);
+	// output_histogram(diff_histogram);
 
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
