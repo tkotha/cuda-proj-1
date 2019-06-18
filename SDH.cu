@@ -289,7 +289,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 					h_pos = (int)(dist/res);
-					atomicAdd(&sh_hist[h_pos], 1);
+					atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -312,7 +312,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 				h_pos = (int)(dist/res);
-				atomicAdd(&sh_hist[h_pos], 1);	
+				atomicAdd(&d_histogram[h_pos], 1);	
 			}
 		}
 	}
@@ -320,11 +320,11 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 
 	//now write back to output
-	__syncthreads();
-	for(i = t; i < histSize; i += blockDim.x)
-	{
-		atomicAdd(&d_histogram[i], sh_hist[i]);
-	}
+	// __syncthreads();
+	// for(i = t; i < histSize; i += blockDim.x)
+	// {
+	// 	atomicAdd(&d_histogram[i], sh_hist[i]);
+	// }
 
 }
 
