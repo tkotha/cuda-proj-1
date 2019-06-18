@@ -246,7 +246,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;
-	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockDim.x+2);
+	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockDim.x+55);
 
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
