@@ -174,7 +174,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
 	int i_id, j_id;
-	double  Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
+	int t = threadIdx.x;
+	double  Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 	if(id < acnt)
 	{
@@ -183,12 +184,12 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		Lz = d_atom_z_list[id];
 		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
-			i_id = i * blockDim.x + threadIdx.x;	//only valid threads may load into shared memory
+			i_id = i * blockDim.x + t;	//only valid threads may load into shared memory
 			if(i_id < acnt)					
 			{
-				R[threadIdx.x] 					= d_atom_x_list[i_id];
-				R[threadIdx.x + blockDim.x]		= d_atom_y_list[i_id];
-				R[threadIdx.x + blockDim.x*2]	= d_atom_z_list[i_id];
+				R[t] 				= d_atom_x_list[i_id];
+				R[t + blockDim.x]	= d_atom_y_list[i_id];
+				R[t + blockDim.x*2]	= d_atom_z_list[i_id];
 			}
 			__syncthreads();
 			for(j = 0; j < blockDim.x; j++) 
@@ -196,30 +197,11 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				j_id = i * blockDim.x + j;	//now this prevents us from writing junk data
 				if(j_id < acnt)
 				{
-					// Rx = R[j];
-					// Ry = R[j + blockDim.x];
-					// Rz = R[j + blockDim.x*2];
+					Rx = R[j];
+					Ry = R[j + blockDim.x];
+					Rz = R[j + blockDim.x*2];
 
-					// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-					dist = 0;
-
-					//Rx
-					Rt = Lx - R[j];
-					Rt *= Rt;
-					dist += Rt;
-
-					//Ry
-					Rt = Ly - R[j+ blockDim.x];
-					Rt *= Rt;
-					dist += Rt;
-
-					//Rz
-					Rt = Lz - R[j + blockDim.x*2];
-					Rt *= Rt;
-					dist += Rt;
-
-					//final calc
-					dist = sqrt(dist);
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 					h_pos = (int)(dist/res);
 					atomicAdd(&d_histogram[h_pos], 1);
@@ -230,37 +212,19 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		}
 
 		//now load the L values into R
-		R[threadIdx.x] 					= Lx;
-		R[threadIdx.x + blockDim.x] 	= Ly;
-		R[threadIdx.x + blockDim.x*2] 	= Lz;
+		R[t] = Lx;
+		R[t + blockDim.x] = Ly;
+		R[t + blockDim.x*2] = Lz;
 		__syncthreads();
-		for(i = threadIdx.x+ 1; i < blockDim.x; i++)
+		for(i = t+ 1; i < blockDim.x; i++)
 		{
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
 			{
-				// Rx = R[i];
-				// Ry = R[i + blockDim.x];
-				// Rz = R[i + blockDim.x*2];
-				// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-				dist = 0;
-				//Rx
-				Rt = Lx - R[j];
-				Rt *= Rt;
-				dist += Rt;
-
-				//Ry
-				Rt = Ly - R[j+ blockDim.x];
-				Rt *= Rt;
-				dist += Rt;
-
-				//Rz
-				Rt = Lz - R[j + blockDim.x*2];
-				Rt *= Rt;
-				dist += Rt;
-
-				//final calc
-				dist = sqrt(dist);
+				Rx = R[i];
+				Ry = R[i + blockDim.x];
+				Rz = R[i + blockDim.x*2];
+				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 				h_pos = (int)(dist/res);
 				atomicAdd(&d_histogram[h_pos], 1);	
