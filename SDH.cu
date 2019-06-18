@@ -367,7 +367,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 	//now write back to output
 	__syncthreads();
-	for(i = t; i < histSize; i += blockDim.x)
+	for(i = t; i < histSize*2; i += blockDim.x)
 	{
 		atomicAdd(&d_histogram[i], sh_hist[i]);
 		//atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
