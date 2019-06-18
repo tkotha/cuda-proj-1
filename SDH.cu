@@ -161,8 +161,8 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 //update: now the kernel is correct, and we match junyi's performance
 __global__ void PDH_kernel3(unsigned long long* d_histogram, 
 							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
-							long long acnt, double res,
-							 int numBlocks, int blockSize)
+							long long acnt, double res)//,
+							 //int numBlocks, int blockSize)
 {
 	extern __shared__ double R[];	
 							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
@@ -188,11 +188,11 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 			if(i_id < acnt)					//here, we starve too many threads, and we lose valid computations because of it
 			{
 				R[t] 				= d_atom_x_list[i_id];
-				R[t + blockSize]	= d_atom_y_list[i_id];
-				R[t + blockSize*2]	= d_atom_z_list[i_id];
+				R[t + blockDim.x]	= d_atom_y_list[i_id];
+				R[t + blockDim.x*2]	= d_atom_z_list[i_id];
 			}
 			__syncthreads();
-			for(j = 0; j < blockSize; j++) 
+			for(j = 0; j < blockDim.x; j++) 
 			//the edge case is in this inner loop.  
 			//when the ith block and last block do comparisons, if it is not a multiple of block size, 
 			//then the pair computations introduce junk data due to going out of bounds
@@ -203,8 +203,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				if(j_id < acnt)
 				{
 					Rx = R[j];
-					Ry = R[j + blockSize];
-					Rz = R[j + blockSize*2];
+					Ry = R[j + blockDim.x];
+					Rz = R[j + blockDim.x*2];
 
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
@@ -218,17 +218,17 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 
 		//now load the L values into R
 		R[t] = Lx;
-		R[t + blockSize] = Ly;
-		R[t + blockSize*2] = Lz;
+		R[t + blockDim.x] = Ly;
+		R[t + blockDim.x*2] = Lz;
 		__syncthreads();
-		for(i = t+ 1; i < blockSize; i++)
+		for(i = t+ 1; i < blockDim.x; i++)
 		{
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
 			{
 				Rx = R[i];
-				Ry = R[i + blockSize];
-				Rz = R[i + blockSize*2];
+				Ry = R[i + blockDim.x];
+				Rz = R[i + blockDim.x*2];
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 				h_pos = (int)(dist/res);
@@ -375,8 +375,8 @@ int main(int argc, char **argv)
 	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		PDH_acnt, PDH_res,
-		 blockcount, BLOCK_SIZE);
+		PDH_acnt, PDH_res);//,
+		 //blockcount, BLOCK_SIZE);
 
 	// PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 	// (d_gpu_histogram, 
