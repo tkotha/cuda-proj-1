@@ -430,7 +430,7 @@ int main(int argc, char **argv)
 	// #define BLOCK_SIZE 64 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 	if(argc != 4)
 	{
-		printf("ERROR: Must specify 3 arguments after ./SDH! parameters allowed are (in order): sample_num, bucket_width, block_size\n");
+		printf("ERROR: Must specify 3 arguments after ./SDH! parameters allowed are (in order):\nsample_num(int), bucket_width(double), block_size(int)\n");
 		printf("Example Execution: ./SDH 10000 500.0 64\n This will compute 10000 points,\n using histogram with bucket resolution 500.0,\n using 64 blocks in the GPU\n");
 		return 1;
 	}
