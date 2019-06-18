@@ -483,6 +483,14 @@ int main(int argc, char **argv)
 	//copy the atomlist over from host to device
 	// cudaMalloc((void**)&d_atom_list, sizeof(atom)*PDH_acnt);
 	// cudaMemcpy(d_atom_list, atom_list, sizeof(atom)*PDH_acnt, cudaMemcpyHostToDevice);
+
+	//start the timer
+	//gettimeofday(&startTime, &Idunno);
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
+
 	cudaMalloc((void**)&d_atom_x_list, sizeof(double)*PDH_acnt);
 	cudaMemcpy(d_atom_x_list, atom_x_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
 
@@ -507,12 +515,7 @@ int main(int argc, char **argv)
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
-	//start the timer
-	//gettimeofday(&startTime, &Idunno);
-	cudaEvent_t start, stop;
-	cudaEventCreate(&start);
-	cudaEventCreate(&stop);
-	cudaEventRecord(start, 0);
+
 
 
 
