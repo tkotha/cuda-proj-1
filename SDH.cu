@@ -573,6 +573,7 @@ int main(int argc, char **argv)
 	output_histogram(diff_histogram);
 
 #endif
+	printf("************* Total Running Time of Kernel = %0.5f ms *************\n", elapsedTime);
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
 	cudaFree(d_atom_y_list);
