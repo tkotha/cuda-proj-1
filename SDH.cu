@@ -298,8 +298,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		sh_hist[i] = 0;
-		sh_hist[i + histSize] = 0;
+		sh_hist[i] = 60;
+		sh_hist[i + histSize] = 60;
 	}
 	__syncthreads();
 
@@ -333,7 +333,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					h_pos = (int)(dist/res);
 
 
-					atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
+					// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -358,7 +358,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				h_pos = (int)(dist/res);
 
 
-				atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
+				// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
 			}
 		}
 	}
@@ -369,7 +369,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	__syncthreads();
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		atomicAdd(&d_histogram[i], sh_hist[histSize * (laneid % NUM_HISTS) + i]);
+		atomicAdd(&d_histogram[i], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
 	}
 
 }
