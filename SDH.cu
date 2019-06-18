@@ -566,10 +566,10 @@ int main(int argc, char **argv)
 			diff_histogram[bi] = h_gpu_histogram[bi] - histogram[bi];
 	}
 
+
+	output_histogram(diff_histogram);
+
 #endif
-
-	// output_histogram(diff_histogram);
-
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
 	cudaFree(d_atom_y_list);
