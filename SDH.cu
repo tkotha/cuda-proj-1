@@ -274,18 +274,23 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //step 2: make sure it is actually faster than tiled
 //step 3: make simple optimizations, like reducing actual size of histogram to store multiple copies
 //step 4: reduce register count if possible
+//unsigned long long is typically 8 bytes. int is typically 4 bytes, short is 2 bytes, and char is 1 byte
+// double is 8 bytes, float is 4 bytes
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							double* d_atom_x_list, double* d_atom_y_list, double* d_atom_z_list,
 							long long acnt, double res, int histSize)
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;
+	//2 copies of histogram, but we use one pointer
 	int * sh_hist = (int *)(R + 3*blockDim.x);
+	//int * sh_hist2 = sh_hist1 + histSize;
 
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
+	int laneid = t & 0x1f;
 	double Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 
@@ -293,6 +298,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
+		sh_hist[histSize + i] = 0;
 	}
 	__syncthreads();
 
@@ -324,7 +330,9 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 					h_pos = (int)(dist/res);
-					atomicAdd(&sh_hist[h_pos], 1);
+
+
+					atomicAdd(&sh_hist[histSize * (laneid % 2) + h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -347,7 +355,9 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 				h_pos = (int)(dist/res);
-				atomicAdd(&sh_hist[h_pos], 1);	
+
+
+				atomicAdd(&sh_hist[histSize * (laneid % 2) + h_pos], 1);
 			}
 		}
 	}
@@ -359,6 +369,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		atomicAdd(&d_histogram[i], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[histSize + i]);
 	}
 
 }
