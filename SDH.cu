@@ -173,7 +173,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 							//the rth z array should be accessed by R[t + BLOCK_SIZE*2 + 3*BLOCK_SIZE]
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
-	int i_id, j_id;
+	//int i_id, j_id;
+	int cur_id;
 	double  Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
 	double dist;
 	if(id < acnt)
@@ -183,18 +184,18 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		Lz = d_atom_z_list[id];
 		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
-			i_id = i * blockDim.x + threadIdx.x;	//only valid threads may load into shared memory
+			cur_id = i * blockDim.x + threadIdx.x;	//only valid threads may load into shared memory for block i
 			if(i_id < acnt)					
 			{
-				R[threadIdx.x] 				= d_atom_x_list[i_id];
-				R[threadIdx.x + blockDim.x]	= d_atom_y_list[i_id];
-				R[threadIdx.x + blockDim.x*2]	= d_atom_z_list[i_id];
+				R[threadIdx.x] 				= d_atom_x_list[cur_id];
+				R[threadIdx.x + blockDim.x]	= d_atom_y_list[cur_id];
+				R[threadIdx.x + blockDim.x*2]	= d_atom_z_list[cur_id];
 			}
 			__syncthreads();
 			for(j = 0; j < blockDim.x; j++) 
 			{
-				j_id = i * blockDim.x + j;	//now this prevents us from writing junk data
-				if(j_id < acnt)
+				cur_id = i * blockDim.x + j;	//now this prevents us from writing junk data for thread j
+				if(cur_id < acnt)
 				{
 					// Rx = R[j];
 					// Ry = R[j + blockDim.x];
@@ -233,8 +234,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		__syncthreads();
 		for(i = threadIdx.x+ 1; i < blockDim.x; i++)
 		{
-			i_id = blockIdx.x * blockDim.x + i;
-			if(i_id < acnt)
+			cur_id = blockIdx.x * blockDim.x + i;	//we only proceed with valid threads for each thread i
+			if(cur_id < acnt)
 			{
 				// Rx = R[i];
 				// Ry = R[i + blockDim.x];
