@@ -174,7 +174,6 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
 	int i_id, j_id;
-	int t = threadIdx.x;
 	double  Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 	if(id < acnt)
@@ -184,12 +183,12 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		Lz = d_atom_z_list[id];
 		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
-			i_id = i * blockDim.x + t;	//only valid threads may load into shared memory
+			i_id = i * blockDim.x + threadIdx.x;	//only valid threads may load into shared memory
 			if(i_id < acnt)					
 			{
-				R[t] 				= d_atom_x_list[i_id];
-				R[t + blockDim.x]	= d_atom_y_list[i_id];
-				R[t + blockDim.x*2]	= d_atom_z_list[i_id];
+				R[threadIdx.x] 				= d_atom_x_list[i_id];
+				R[threadIdx.x + blockDim.x]	= d_atom_y_list[i_id];
+				R[threadIdx.x + blockDim.x*2]	= d_atom_z_list[i_id];
 			}
 			__syncthreads();
 			for(j = 0; j < blockDim.x; j++) 
@@ -212,11 +211,11 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		}
 
 		//now load the L values into R
-		R[t] = Lx;
-		R[t + blockDim.x] = Ly;
-		R[t + blockDim.x*2] = Lz;
+		R[threadIdx.x] = Lx;
+		R[threadIdx.x + blockDim.x] = Ly;
+		R[threadIdx.x + blockDim.x*2] = Lz;
 		__syncthreads();
-		for(i = t+ 1; i < blockDim.x; i++)
+		for(i = threadIdx.x+ 1; i < blockDim.x; i++)
 		{
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
