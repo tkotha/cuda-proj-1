@@ -191,12 +191,6 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				R[t + blockSize]	= d_atom_y_list[i_id];
 				R[t + blockSize*2]	= d_atom_z_list[i_id];
 			}
-			// else
-			// {
-			// 	R[t] 				= 0.0;
-			// 	R[t + blockSize]	= 0.0;
-			// 	R[t + blockSize*2]	= 0.0;	
-			// }
 			__syncthreads();
 			for(j = 0; j < blockSize; j++) 
 			//the edge case is in this inner loop.  
@@ -322,17 +316,17 @@ int main(int argc, char **argv)
 	}
 	/* start counting time */
 
-	// printf("Starting CPU...\n");
-	// gettimeofday(&startTime, &Idunno);
+	printf("Starting CPU...\n");
+	gettimeofday(&startTime, &Idunno);
 	
-	//  /*call CPU single thread version to compute the histogram 
-	// PDH_baseline();
+	 /*call CPU single thread version to compute the histogram */
+	PDH_baseline();
 	
-	// /* check the total running time */ 
-	// report_running_time();
+	/* check the total running time */ 
+	report_running_time();
 	
-	// /* print out the histogram */
-	// output_histogram(histogram);
+	/* print out the histogram */
+	output_histogram(histogram);
 	printf("Starting GPU...\n");
 
 	//cudaDeviceReset();
