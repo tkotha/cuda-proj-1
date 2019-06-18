@@ -12,7 +12,6 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-#define BLOCK_SIZE 64 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -46,7 +45,7 @@ unsigned long long * diff_histogram;
 long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
 double   PDH_res;		/* value of w                             */
-
+int BLOCK_SIZE;
 // atom * atom_list;		/* list of all data points                */
 // atom * d_atom_list;
 
@@ -428,7 +427,13 @@ void output_histogram(unsigned long long* histogram){
 int main(int argc, char **argv)
 {
 	int i;
-
+	// #define BLOCK_SIZE 64 /*This is temporary until I can a) make sure the basic algorithm is correct and b)I've made sure i know how to dynamically allocate shared memory
+	if(argc != 4)
+	{
+		printf("ERROR: Must specify 3 arguments after ./SDH! parameters allowed are (in order): sample_num, bucket_width, block_size\n");
+		printf("Example Execution: ./SDH 10000 500.0 64\n This will compute 10000 points,\n using histogram with bucket resolution 500.0,\n using 64 blocks in the GPU\n");
+		return 1;
+	}
 	PDH_acnt = atoi(argv[1]);
 	PDH_res	 = atof(argv[2]);
 //printf("args are %d and %f\n", PDH_acnt, PDH_res);
