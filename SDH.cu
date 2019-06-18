@@ -234,7 +234,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 }
 
 //now for histogram privitization
-//step 1: have it be correct
+//step 1: have it be correct -- apparently it's fine with multiples of block size, but it has very tiny difference with non multiples
+			//this smells like an edge case
 //step 2: make sure it is actually faster than tiled
 //step 3: make simple optimizations, like reducing actual size of histogram to store multiple copies
 //step 4: reduce register count if possible
@@ -268,31 +269,31 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 		Lz = d_atom_z_list[id];
 		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
-			i_id = i *blockDim.x + t;	//only valid threads may load into shared memory
-			if(i_id < acnt)
+			i_id = i * blockDim.x + t;	//only valid threads may load into shared memory
+			if(i_id < acnt)					
 			{
-				R[t]				= d_atom_x_list[i_id];
+				R[t] 				= d_atom_x_list[i_id];
 				R[t + blockDim.x]	= d_atom_y_list[i_id];
-				R[t + blockDim.x*2] = d_atom_z_list[i_id];
+				R[t + blockDim.x*2]	= d_atom_z_list[i_id];
 			}
 			__syncthreads();
-			for(j = 0; j < blockDim.x; j++)
+			for(j = 0; j < blockDim.x; j++) 
 			{
-				j_id = i*blockDim.x + j; //now this prevents us from writing junk data
+				j_id = i * blockDim.x + j;	//now this prevents us from writing junk data
 				if(j_id < acnt)
 				{
 					Rx = R[j];
 					Ry = R[j + blockDim.x];
 					Rz = R[j + blockDim.x*2];
 
-					dist = sqrt((Lx-Rx)*(Lx-Rx) + 
-								(Ly-Ry)*(Ly-Ry) + 
-								(Lz-Rz)*(Lz-Rz));
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+
 					h_pos = (int)(dist/res);
 					atomicAdd(&sh_hist[h_pos], 1);
 				}
 			}
 			__syncthreads();
+			
 		}
 
 		//now load the L values into R
@@ -300,7 +301,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 		R[t + blockDim.x] = Ly;
 		R[t + blockDim.x*2] = Lz;
 		__syncthreads();
-		for(i = t+1; i < blockDim.x; i++)
+		for(i = t+ 1; i < blockDim.x; i++)
 		{
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
@@ -308,12 +309,10 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				Rx = R[i];
 				Ry = R[i + blockDim.x];
 				Rz = R[i + blockDim.x*2];
+				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
-				dist = sqrt((Lx-Rx)*(Lx-Rx) + 
-								(Ly-Ry)*(Ly-Ry) + 
-								(Lz-Rz)*(Lz-Rz));
 				h_pos = (int)(dist/res);
-				atomicAdd(&sh_hist[h_pos], 1);
+				atomicAdd(&sh_hist[h_pos], 1);	
 			}
 		}
 	}
