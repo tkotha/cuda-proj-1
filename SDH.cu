@@ -280,7 +280,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;
-	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockDim.x);
+	int * sh_hist = (int *)(R + 3*blockDim.x);
 
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
@@ -290,7 +290,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	double dist;
 
 	//initialize the shared histogram to 0
-	for(i = t; i <= histSize; i += blockDim.x)
+	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
 	}
@@ -356,7 +356,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 	//now write back to output
 	__syncthreads();
-	for(i = t; i <= histSize; i += blockDim.x)
+	for(i = t; i < histSize; i += blockDim.x)
 	{
 		atomicAdd(&d_histogram[i], sh_hist[i]);
 	}
