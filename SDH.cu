@@ -236,6 +236,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //now for histogram privitization
 //step 1: have it be correct -- apparently it's fine with multiples of block size, but it has very tiny difference with non multiples
 			//this smells like an edge case
+			//this small error is only introduced when i attempt to do the histogram priv portion
 //step 2: make sure it is actually faster than tiled
 //step 3: make simple optimizations, like reducing actual size of histogram to store multiple copies
 //step 4: reduce register count if possible
@@ -289,7 +290,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 					h_pos = (int)(dist/res);
-					atomicAdd(&d_histogram[h_pos], 1);
+					atomicAdd(&sh_hist[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -312,7 +313,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 				h_pos = (int)(dist/res);
-				atomicAdd(&d_histogram[h_pos], 1);	
+				atomicAdd(&sh_hist[h_pos], 1);	
 			}
 		}
 	}
@@ -320,11 +321,11 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 
 	//now write back to output
-	// __syncthreads();
-	// for(i = t; i < histSize; i += blockDim.x)
-	// {
-	// 	atomicAdd(&d_histogram[i], sh_hist[i]);
-	// }
+	__syncthreads();
+	for(i = t; i < histSize; i += blockDim.x)
+	{
+		atomicAdd(&d_histogram[i], sh_hist[i]);
+	}
 
 }
 
