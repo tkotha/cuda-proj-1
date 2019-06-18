@@ -12,6 +12,7 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
+#define COMPARE_CPU 0
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -458,18 +459,19 @@ int main(int argc, char **argv)
 	}
 	/* start counting time */
 
-	// printf("Starting CPU...\n");
-	// gettimeofday(&startTime, &Idunno);
+#if COMPARE_CPU
+	printf("Starting CPU...\n");
+	gettimeofday(&startTime, &Idunno);
 	
-	//  /*call CPU single thread version to compute the histogram */
-	// PDH_baseline();
+	 /*call CPU single thread version to compute the histogram */
+	PDH_baseline();
 	
-	// /* check the total running time */ 
-	// report_running_time();
+	/* check the total running time */ 
+	report_running_time();
 	
-	// /* print out the histogram */
-	// output_histogram(histogram);
-
+	/* print out the histogram */
+	output_histogram(histogram);
+#endif
 
 
 	printf("Starting GPU...\n");
@@ -550,19 +552,21 @@ int main(int argc, char **argv)
 	output_histogram(h_gpu_histogram);
 
 	//difference calculation--------------------------------------------------------------------------------
-	// printf("Difference: \n");
-	// diff_histogram = (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
-	// int bi;
-	// for(bi = 0; bi < num_buckets; bi++)
-	// {
-	// 	// diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
-	// 	if(histogram[bi] > h_gpu_histogram[bi])
-	// 		diff_histogram[bi] = histogram[bi] - h_gpu_histogram[bi];
-	// 	else
-	// 		diff_histogram[bi] = h_gpu_histogram[bi] - histogram[bi];
-	// }
+	
+#if COMPARE_CPU
+	printf("Difference: \n");
+	diff_histogram = (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
+	int bi;
+	for(bi = 0; bi < num_buckets; bi++)
+	{
+		// diff_histogram[bi].d_cnt = histogram[bi].d_cnt - h_gpu_histogram[bi].d_cnt;
+		if(histogram[bi] > h_gpu_histogram[bi])
+			diff_histogram[bi] = histogram[bi] - h_gpu_histogram[bi];
+		else
+			diff_histogram[bi] = h_gpu_histogram[bi] - histogram[bi];
+	}
 
-
+#endif
 
 	// output_histogram(diff_histogram);
 
