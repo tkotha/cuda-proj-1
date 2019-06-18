@@ -278,11 +278,12 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 // double is 8 bytes, float is 4 bytes
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							double* d_atom_x_list, double* d_atom_y_list, double* d_atom_z_list,
-							long long acnt, double res, int histSize, int numHists)
+							long long acnt, double res, int histSize)
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;
 	//2 copies of histogram, but we use one pointer
+	#define NUM_HISTS 2
 	int * sh_hist = (int *)(R + 3*blockDim.x);
 	//int * sh_hist2 = sh_hist1 + histSize;
 
@@ -295,9 +296,10 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	double dist;
 
 	//initialize the shared histogram to 0
-	for(i = t; i < histSize*numHists; i += blockDim.x)
+	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
+		sh_hist[i + histSize] = 0;
 	}
 	__syncthreads();
 
@@ -365,9 +367,10 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 	//now write back to output
 	__syncthreads();
-	for(i = t; i < histSize*numHists; i += blockDim.x)
+	for(i = t; i < histSize; i += blockDim.x)
 	{
-		atomicAdd(&d_histogram[i % numHists], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
 	}
 
 }
@@ -513,7 +516,7 @@ int main(int argc, char **argv)
 	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		PDH_acnt, PDH_res, num_buckets, sizeof(unsigned long long) / sizeof(int));
+		PDH_acnt, PDH_res, num_buckets);
 
 
 	//copy the histogram results back from gpu over to cpu
