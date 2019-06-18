@@ -185,7 +185,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 		for(i = blockIdx.x +1; i < gridDim.x; i++)
 		{
 			cur_id = i * blockDim.x + threadIdx.x;	//only valid threads may load into shared memory for block i
-			if(i_id < acnt)					
+			if(cur_id < acnt)					
 			{
 				R[threadIdx.x] 				= d_atom_x_list[cur_id];
 				R[threadIdx.x + blockDim.x]	= d_atom_y_list[cur_id];
