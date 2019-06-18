@@ -246,7 +246,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 {
 	extern __shared__ double shmem[];
 	double* R = shmem;
-	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockDim.x);
+	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockDim.x+1);
 
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
 	int i, j, h_pos;
@@ -449,7 +449,7 @@ int main(int argc, char **argv)
 	
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
-	int shmemsize4 = BLOCK_SIZE*3*sizeof(double) + sizeof(unsigned long long)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = (BLOCK_SIZE*3+1)*sizeof(double) + sizeof(unsigned long long)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
