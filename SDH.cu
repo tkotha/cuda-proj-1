@@ -463,6 +463,9 @@ int main(int argc, char **argv)
 	
 	/* print out the histogram */
 	output_histogram(histogram);
+
+
+
 	printf("Starting GPU...\n");
 
 	//cudaDeviceReset();
@@ -487,11 +490,8 @@ int main(int argc, char **argv)
 	cudaMemset(d_gpu_histogram, 0, sizeof(unsigned long long)*num_buckets);
 	cudaMemcpy(d_gpu_histogram, h_gpu_histogram, sizeof(unsigned long long)*num_buckets,cudaMemcpyHostToDevice);
 
-	//start the timer
-	gettimeofday(&startTime, &Idunno);
 
-
-
+	//Q:i should ask if the cudamalloc, memset, and memcpy should be included in time recording, or if we should do without it
 	
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
@@ -499,6 +499,15 @@ int main(int argc, char **argv)
 	printf("blockcount: %d\n",blockcount);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
+	//start the timer
+	//gettimeofday(&startTime, &Idunno);
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
+	cudaEventRecord(start, 0);
+
+
+
 	//run the kernel
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
@@ -523,8 +532,14 @@ int main(int argc, char **argv)
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
 
 	//check total running time
-	report_running_time_GPU();
-
+	//report_running_time_GPU();
+	cudaEventRecord(stop, 0);
+	cudaEventSynchronize(stop);
+	float elapsedTime;
+	cudaEventElapsedTime( &elapsedTime, start, stop);
+	printf("CUDA EVENT: Running time for GPU version: %0.5f ms\n", elapsedTime);
+	cudaEventDestroy(start);
+	cudaEventDestroy(stop);
 	//print out the resulting histogram from the GPU
 	output_histogram(h_gpu_histogram);
 
