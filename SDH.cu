@@ -337,7 +337,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
 					// atomicAdd(&d_histogram[h_pos], 1);
 				}
-				__syncthreads();
+
 			}
 			__syncthreads();
 			
@@ -364,7 +364,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
 				// atomicAdd(&d_histogram[h_pos], 1);
 			}
-			__syncthreads();
+			
 		}
 	}
 
