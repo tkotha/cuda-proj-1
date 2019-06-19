@@ -301,8 +301,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 		sh_hist[i] = 0;
 		// sh_hist[i + histSize] = 0;
 	}
-	__syncthreads();
-
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
 	{
