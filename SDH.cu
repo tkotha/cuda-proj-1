@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 3
+#define KERNELTYPE 4
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
