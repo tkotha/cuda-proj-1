@@ -297,7 +297,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		sh_hist[i] = 0;
+		sh_hist[i] = 1;
 	}
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
@@ -331,7 +331,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 					
 					// atomicAdd((int*)&sh_hist[h_pos], 1);
-					atomicAdd(&d_histogram[h_pos], 1);
+					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -358,7 +358,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 				h_pos = (int)(dist/res);
 				// atomicAdd((int*)&sh_hist[h_pos], 1);
-				atomicAdd(&d_histogram[h_pos], 1);
+				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
 		}
@@ -370,7 +370,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	__syncthreads();
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		// atomicAdd(&d_histogram[i], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[i]);
 	}
 
 }
