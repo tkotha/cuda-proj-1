@@ -284,7 +284,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	double* R = shmem;
 	//2 copies of histogram, but we use one pointer
 	// #define NUM_HISTS 2
-	int * sh_hist = (int *)(R + 3*blockDim.x+4);
+	int * sh_hist = (int *)(R + 4*blockDim.x);
 
 
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
