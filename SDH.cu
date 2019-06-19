@@ -297,7 +297,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		sh_hist[i] = 1;
+		sh_hist[i] = 0;
 	}
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
