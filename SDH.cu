@@ -283,7 +283,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 {
 	double* R = shmem;
 	//2 copies of histogram, but we use one pointer
-	// #define NUM_HISTS 2
 	int * sh_hist = (int *)(R + 3*blockDim.x);
 
 
@@ -291,7 +290,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
-	// int laneid = t & 0x1f;
 	double Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 
@@ -299,7 +297,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
-		// sh_hist[i + histSize] = 0;
 	}
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
@@ -329,10 +326,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 					h_pos = (int)(dist/res);
-					// h_pos = 79;
-
 					atomicAdd((int*)&sh_hist[h_pos], 1);
-					// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
 					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 
@@ -357,9 +351,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
 				h_pos = (int)(dist/res);
-				// h_pos = 79;
 				atomicAdd((int*)&sh_hist[h_pos], 1);
-				// atomicAdd(&sh_hist[histSize * (laneid % NUM_HISTS) + h_pos], 1);
 				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
@@ -373,7 +365,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		atomicAdd(&d_histogram[i], sh_hist[i]);
-		// atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
 	}
 
 }
