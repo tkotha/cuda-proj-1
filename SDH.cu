@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 3
+#define KERNELTYPE 4
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -285,8 +285,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 {
 	// extern __shared__ double shmem[];
 	//for now assume a block count of 157 and 80 (based on 10000 pts, 500.0 resolution, and 64 blocks)
-	__shared__ double shmem[(157*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*80];
-	double* R = shmem;
+	__shared__ int* shmem[(157*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*80];
+	double* R = (double*)shmem;
 	//2 copies of histogram, but we use one pointer
 	int * sh_hist = (int *)(R + 3*blockDim.x);
 
