@@ -347,7 +347,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 		for(i = t+ 1; i < blockDim.x; i++)
 		{
 			i_id = blockIdx.x * blockDim.x + i;
-		__syncthreads();
 			if(i_id < acnt)
 			{
 
