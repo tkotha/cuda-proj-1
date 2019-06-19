@@ -362,8 +362,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
-		}
 		__syncthreads();
+		}
 	}
 
 
