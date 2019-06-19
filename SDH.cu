@@ -13,6 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
+#define KERNELTYPE 1
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -319,13 +320,16 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				j_id = i * blockDim.x + j;	//now this prevents us from writing junk data
 				if(j_id < acnt)
 				{
+					/* DISTANCE FUNCTION */
 					Rx = R[j];
 					Ry = R[j + blockDim.x];
 					Rz = R[j + blockDim.x*2];
 
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-
 					h_pos = (int)(dist/res);
+					/* END DISTANCE FUNCTION */
+
+					
 					atomicAdd((int*)&sh_hist[h_pos], 1);
 					// atomicAdd(&d_histogram[h_pos], 1);
 				}
@@ -345,10 +349,13 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
 			{
+
+				/* DISTANCE FUNCTION */
 				Rx = R[i];
 				Ry = R[i + blockDim.x];
 				Rz = R[i + blockDim.x*2];
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
 				atomicAdd((int*)&sh_hist[h_pos], 1);
@@ -515,19 +522,22 @@ int main(int argc, char **argv)
 
 
 	//run the kernel
+#if KERNELTYPE == 1
+	PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 
-	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+#elif KERNELTYPE == 3
+	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res);
 
-	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
-	// (d_gpu_histogram, 
-	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res);
-
+#elif KERNELTYPE == 4
 	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res, num_buckets);
 
+#endif
 
 	//copy the histogram results back from gpu over to cpu
 	cudaMemcpy(h_gpu_histogram, d_gpu_histogram, sizeof(unsigned long long)*num_buckets, cudaMemcpyDeviceToHost);
