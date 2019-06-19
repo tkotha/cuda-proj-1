@@ -284,7 +284,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	double* R = shmem;
 	//2 copies of histogram, but we use one pointer
 	// #define NUM_HISTS 2
-	unsigned long long * sh_hist = (unsigned long long *)(R + 3*blockDim.x);
+	int * sh_hist = (int *)(R + 3*blockDim.x);
 
 
 	int id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -330,7 +330,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
-					h_pos = (int)floor(dist/res);
+					h_pos = (int)(dist/res);
 					// h_pos = 79;
 
 					atomicAdd(&sh_hist[h_pos], 1);
@@ -514,7 +514,7 @@ int main(int argc, char **argv)
 	
 	int blockcount = (int)ceil(PDH_acnt / (float) BLOCK_SIZE);
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
-	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(unsigned long long /*int*/)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("numbuckets: %d\n", num_buckets);
 	printf("shmemsize3:  %d\n", shmemsize3);
