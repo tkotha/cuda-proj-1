@@ -217,7 +217,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 					Rt *= Rt;
 					dist += Rt;
 
-					dist = sqrt(dist);
+					dist = __fsqrt_rn(dist);
 
 					h_pos = (int)(dist/res);
 					atomicAdd(&d_histogram[h_pos], 1);
@@ -257,7 +257,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				Rt *= Rt;
 				dist += Rt;
 
-				dist = sqrt(dist);
+				dist = __fsqrt_rn(dist);
 
 				h_pos = (int)(dist/res);
 				atomicAdd(&d_histogram[h_pos], 1);	
