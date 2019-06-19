@@ -518,15 +518,15 @@ int main(int argc, char **argv)
 
 	// PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
 
-	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
-	(d_gpu_histogram, 
-		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		PDH_acnt, PDH_res);
-
-	// PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
+	// PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
 	// (d_gpu_histogram, 
 	// 	d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-	// 	PDH_acnt, PDH_res, num_buckets);
+	// 	PDH_acnt, PDH_res);
+
+	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
+	(d_gpu_histogram, 
+		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+		PDH_acnt, PDH_res, num_buckets);
 
 
 	//copy the histogram results back from gpu over to cpu
