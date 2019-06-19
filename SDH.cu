@@ -330,7 +330,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 
-					h_pos = (int)(dist/res);
+					h_pos = (int)floor(dist/res);
 					// h_pos = 79;
 
 					atomicAdd(&sh_hist[h_pos], 1);
