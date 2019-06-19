@@ -330,8 +330,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					/* END DISTANCE FUNCTION */
 
 					
-					// atomicAdd((int*)&sh_hist[h_pos], 1);
-					atomicAdd(&d_histogram[h_pos], 1);
+					atomicAdd((int*)&sh_hist[h_pos], 1);
+					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -357,8 +357,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
-				// atomicAdd((int*)&sh_hist[h_pos], 1);
-				atomicAdd(&d_histogram[h_pos], 1);
+				atomicAdd((int*)&sh_hist[h_pos], 1);
+				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
 		}
@@ -370,7 +370,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	__syncthreads();
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		// atomicAdd(&d_histogram[i], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[i]);
 	}
 
 }
