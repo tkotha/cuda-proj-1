@@ -363,6 +363,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 			}
 			
 		}
+		__syncthreads();
 	}
 
 
