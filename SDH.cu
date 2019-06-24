@@ -368,11 +368,14 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
 			{
-
+				//since we've effectively forced kernel 4 to work from warp directly, perhaps we can just directly use the registers...
 				/* DISTANCE FUNCTION */
-				Rx = R[i];
-				Ry = R[i + blockDim.x];
-				Rz = R[i + blockDim.x*2];
+				// Rx = R[i];
+				// Ry = R[i + blockDim.x];
+				// Rz = R[i + blockDim.x*2];
+				Rx = __shfl_down(0xffffffff, Lx, i, 32);
+				Ry = __shfl_down(0xffffffff, Ly, i, 32);
+				Rz = __shfl_down(0xffffffff, Lz, i, 32);
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 				/* END DISTANCE FUNCTION */
 
@@ -585,6 +588,7 @@ int main(int argc, char **argv)
 		1) blocksize 32  : 33.01818 ms
 	
 			with lane id 'optimization': 33.25898 ms... wut?
+			ok, so the for loop may have been the culprit... but its still 33.06189 ms... certainly not any better
 
 		2) blocksize 512 : 42.04790 ms
 
