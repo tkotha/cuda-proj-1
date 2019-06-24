@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 3
+#define KERNELTYPE 4
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -537,12 +537,20 @@ int main(int argc, char **argv)
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res);
 
+	/*
+		current best timings (of the accurate running configurations):
+		1) blocksize 32 : 32.50355 ms
+		2) blocksize 64 : 33.21270 ms
+	*/
+
 #elif KERNELTYPE == 4
 	// PDH_kernel4 <<<blockcount, BLOCK_SIZE/*, shmemsize4*/>>> //now we try to privatize the histogram
 	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 	(d_gpu_histogram, 
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res, num_buckets);
+
+
 
 #endif
 
