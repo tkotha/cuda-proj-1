@@ -12,8 +12,8 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-#define COMPARE_CPU 1
-#define KERNELTYPE 4
+#define COMPARE_CPU 0
+#define KERNELTYPE 3
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -273,8 +273,14 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 			//this small error is only introduced when i attempt to do the histogram priv portion. it doesnt exist if i go back to writing in the global histogram
 			//doesnt seem to be an off by 1 error in terms of shared mem allocation
 // till i have a better handle on what's going on here, I may need to fix the block size and numbuckets size
+			//interesting... this kernel is in fact correct at blocksizes of 32 and 512. Not sure why but I'll go with it
+			//incidently, it's also its fastest at 32... good enough for me
+			//however, its still slower than my tiled kernel at the same blocksize(by .5 ms)
+
 // so that I can debug the actual shared memory portion
 //step 2: make sure it is actually faster than tiled
+			//presently it is not
+
 //step 3: make simple optimizations, like reducing actual size of histogram to store multiple copies
 //step 4: reduce register count if possible
 //unsigned long long is typically 8 bytes. int is typically 4 bytes, short is 2 bytes, and char is 1 byte
