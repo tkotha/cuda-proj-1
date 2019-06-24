@@ -306,7 +306,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
-	double Lx, Ly, Lz;//, Rx, Ry, Rz;
+	double Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
 	double dist;
 
 	//initialize the shared histogram to 0
