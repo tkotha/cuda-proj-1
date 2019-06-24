@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 0
-#define KERNELTYPE 3
+#define KERNELTYPE 4
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -531,6 +531,10 @@ int main(int argc, char **argv)
 	printf("shmemsize4:  %d\n", shmemsize4);
 
 
+	//depending on how this goes, what I may opt for is 'strategizing' my kernels.
+	//I will prioritize on getting the current kernel 4 on being as fast as possible (assuming it's correct at blocksize 32)
+	//if it can beat kernel 3, then I will conditoinally check for requested blocksize.
+	//if it equals 32 then I use kernel 4, otherwise I use kernel 3
 
 
 	//run the kernel
