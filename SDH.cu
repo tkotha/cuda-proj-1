@@ -373,9 +373,9 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				// Rx = R[i];
 				// Ry = R[i + blockDim.x];
 				// Rz = R[i + blockDim.x*2];
-				int Rxi = __shfl_down_sync (0xffffffff, j, i, 32);
-				int Ryi = __shfl_down_sync (0xffffffff, j, i, 32);
-				int Rzi = __shfl_down_sync (0xffffffff, j, i, 32);
+				int Rxi = __shfl_down (0xffffffff, j, i, 32);
+				int Ryi = __shfl_down (0xffffffff, j, i, 32);
+				int Rzi = __shfl_down (0xffffffff, j, i, 32);
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 				/* END DISTANCE FUNCTION */
 
