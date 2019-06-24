@@ -289,9 +289,10 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //here we make a very strong assumption that the kernel block size is 32 only!
 
 //this seems to behave correctly if the blocksize is 512 or 32
+#define HISTCOUNT 2
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							double* d_atom_x_list, double* d_atom_y_list, double* d_atom_z_list,
-							long long acnt, double res, int histSize, int histCount)
+							long long acnt, double res, int histSize)
 {
 	extern __shared__ double shmem[];
 	//for now assume a block count of 157 and 80 (based on 10000 pts, 500.0 resolution, and 64 blocks)
@@ -313,8 +314,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		for(j = 0; j < histCount; j++)
-			sh_hist[i + j*histSize] = 0;
+		sh_hist[i] = 0;
+		sh_hist[i + histSize] = 0;
 		
 	}
 	//do tiled algorithm with sh_hist
@@ -349,7 +350,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 					
 					// atomicAdd((int*)&sh_hist[h_pos], 1);
-					atomicAdd((int*)&sh_hist[h_pos + histSize*(lane % histCount)], 1);
+					atomicAdd((int*)&sh_hist[h_pos + histSize*(lane % HISTCOUNT)], 1);
 					
 				}
 			}
@@ -377,7 +378,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 				h_pos = (int)(dist/res);
 				// atomicAdd((int*)&sh_hist[h_pos], 1);
-				atomicAdd((int*)&sh_hist[h_pos + histSize*(lane % histCount)], 1);
+				atomicAdd((int*)&sh_hist[h_pos + histSize*(lane % HISTCOUNT)], 1);
 			}
 			
 		}
@@ -389,8 +390,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	__syncthreads();
 	for(i = t; i < histSize; i += blockDim.x)
 	{
-		for(j = 0; j < histCount; j++)
-			atomicAdd(&d_histogram[i], sh_hist[i + j*histSize]);
+		atomicAdd(&d_histogram[i], sh_hist[i]);
+		atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
 	}
 
 }
@@ -530,7 +531,7 @@ int main(int argc, char **argv)
 	//Q:i should ask if the cudamalloc, memset, and memcpy should be included in time recording, or if we should do without it
 	
 	int blockcount = (int)ceil(PDH_acnt / (double) BLOCK_SIZE);
-	int histCount = 4;
+	int histCount = HISTCOUNT;
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets*histCount;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
@@ -571,7 +572,7 @@ int main(int argc, char **argv)
 		PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 		(d_gpu_histogram, 
 			d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-			PDH_acnt, PDH_res, num_buckets, histCount);
+			PDH_acnt, PDH_res, num_buckets);
 	else
 	{
 		printf("ERROR: kernel 4 is only accurate at block size 32! QUIT\n");
@@ -582,6 +583,9 @@ int main(int argc, char **argv)
 	for inputsize 10000
 		current best timings (of the accurate running configurations):
 		1) blocksize 32  : 33.01818 ms
+	
+			with lane id 'optimization': 33.25898 ms... wut?
+
 		2) blocksize 512 : 42.04790 ms
 
 	for inputsize 512000
