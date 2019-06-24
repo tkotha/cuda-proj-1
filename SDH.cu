@@ -286,6 +286,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //unsigned long long is typically 8 bytes. int is typically 4 bytes, short is 2 bytes, and char is 1 byte
 // double is 8 bytes, float is 4 bytes
 
+//here we make a very strong assumption that the kernel block size is 32 only!
+
 //this seems to behave correctly if the blocksize is 512 or 32
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							double* d_atom_x_list, double* d_atom_y_list, double* d_atom_z_list,
@@ -548,22 +550,37 @@ int main(int argc, char **argv)
 		PDH_acnt, PDH_res);
 
 	/*
+	for inputsize 10000
 		current best timings (of the accurate running configurations):
 		1) blocksize 32 : 32.50355 ms		--since this is my best configuration, perhaps I should do a warp specific kernel
 		2) blocksize 64 : 33.21270 ms
+
+	for inputsize 512000
+		1) blocksize 32 : 66.485 seconds
 	*/
 
 #elif KERNELTYPE == 4
 	// PDH_kernel4 <<<blockcount, BLOCK_SIZE/*, shmemsize4*/>>> //now we try to privatize the histogram
-	PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
-	(d_gpu_histogram, 
-		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
-		PDH_acnt, PDH_res, num_buckets);
+	if(BLOCK_SIZE == 32)
+		PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
+		(d_gpu_histogram, 
+			d_atom_x_list, d_atom_y_list, d_atom_z_list, 
+			PDH_acnt, PDH_res, num_buckets);
+	else
+	{
+		printf("ERROR: kernel 4 is only accurate at block size 32! QUIT\n");
+		goto cudaFinish;
+	}
 
 	/*
+	for inputsize 10000
 		current best timings (of the accurate running configurations):
 		1) blocksize 32  : 33.01818 ms
 		2) blocksize 512 : 42.04790 ms
+
+	for inputsize 512000
+		1) blocksize 32 : 68.002 seconds
+
 	*/
 
 #endif
@@ -602,7 +619,9 @@ int main(int argc, char **argv)
 	output_histogram(diff_histogram);
 
 #endif
+
 	printf("************* Total Running Time of Kernel = %0.5f ms *************\n", elapsedTime);
+cudaFinish:
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
 	cudaFree(d_atom_y_list);
