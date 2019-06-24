@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 3
+#define KERNELTYPE 4
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -539,7 +539,7 @@ int main(int argc, char **argv)
 
 	/*
 		current best timings (of the accurate running configurations):
-		1) blocksize 32 : 32.50355 ms
+		1) blocksize 32 : 32.50355 ms		--since this is my best configuration, perhaps I should do a warp specific kernel
 		2) blocksize 64 : 33.21270 ms
 	*/
 
