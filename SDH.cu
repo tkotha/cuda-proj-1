@@ -530,7 +530,7 @@ int main(int argc, char **argv)
 	//Q:i should ask if the cudamalloc, memset, and memcpy should be included in time recording, or if we should do without it
 	
 	int blockcount = (int)ceil(PDH_acnt / (double) BLOCK_SIZE);
-	int histCount = 2;
+	int histCount = 4;
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets*histCount;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
