@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 4
+#define KERNELTYPE 3
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -550,7 +550,11 @@ int main(int argc, char **argv)
 		d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 		PDH_acnt, PDH_res, num_buckets);
 
-
+	/*
+		current best timings (of the accurate running configurations):
+		1) blocksize 32  : 33.01818 ms
+		2) blocksize 512 : 42.04790 ms
+	*/
 
 #endif
 
