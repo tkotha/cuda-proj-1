@@ -2,7 +2,7 @@ all:
 	nvcc SDH.cu -o SDH
 commit:
 	git add -A .
-	git commit -m "project 2 2nd attempt.. step 1: get the tiling algorithm to work"
+	git commit -m "project 2 3rd attempt.. get the histogram priv to be accurate"
 	git push origin
 pull:
 	git pull origin
