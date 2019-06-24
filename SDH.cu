@@ -306,7 +306,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
-	double Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
+	double Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 
 	//initialize the shared histogram to 0
@@ -336,34 +336,17 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				if(j_id < acnt)
 				{
 					/* DISTANCE FUNCTION */
-					// Rx = R[j];
-					// Ry = R[j + blockDim.x];
-					// Rz = R[j + blockDim.x*2];
-					// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-					dist = 0.0;
-					//Rx
-					Rt = Lx - R[j];
-					Rt *= Rt;
-					dist += Rt;
+					Rx = R[j];
+					Ry = R[j + blockDim.x];
+					Rz = R[j + blockDim.x*2];
 
-					//Ry
-					Rt = Ly - R[j + blockDim.x];
-					Rt *= Rt;
-					dist += Rt;
-
-					//Rz
-					Rt = Lz - R[j + blockDim.x*2];
-					Rt *= Rt;
-					dist += Rt;
-
-					dist = sqrt(dist);
-
-
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
 					
 					atomicAdd((int*)&sh_hist[h_pos], 1);
+					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -382,32 +365,15 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 			{
 
 				/* DISTANCE FUNCTION */
-				// Rx = R[i];
-				// Ry = R[i + blockDim.x];
-				// Rz = R[i + blockDim.x*2];
-				// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+				Rx = R[i];
+				Ry = R[i + blockDim.x];
+				Rz = R[i + blockDim.x*2];
+				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 				/* END DISTANCE FUNCTION */
-
-				dist = 0.0;
-				//Rx
-				Rt = Lx - R[j];
-				Rt *= Rt;
-				dist += Rt;
-
-				//Ry
-				Rt = Ly - R[j + blockDim.x];
-				Rt *= Rt;
-				dist += Rt;
-
-				//Rz
-				Rt = Lz - R[j + blockDim.x*2];
-				Rt *= Rt;
-				dist += Rt;
-
-				dist = sqrt(dist);
 
 				h_pos = (int)(dist/res);
 				atomicAdd((int*)&sh_hist[h_pos], 1);
+				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
 		}
