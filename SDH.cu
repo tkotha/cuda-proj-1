@@ -22,8 +22,8 @@
 
 #define ATOM_DIM float
 #define ATOM_ZERO 0.0
-#define SQRT_CPU sqrtf
-#define SQRT sqrt
+#define SQRT_CPU sqrt
+#define SQRT sqrtf
 
 
 /* descriptors for single atom in the tree */
