@@ -18,7 +18,7 @@
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
 #define SQRT_CPU sqrt
-#define SQRT sqrtf
+#define SQRT sqrt
 
 
 //using ATOM_DIM = float is a red herring over all. It certainly explains the speedup issues, but sqrt with float is completely different, regardless of CPU/GPU differences
