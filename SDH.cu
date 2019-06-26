@@ -15,17 +15,17 @@
 #define COMPARE_CPU 1
 #define KERNELTYPE 4
 
-#define ATOM_DIM double
+// #define ATOM_DIM double
+// #define ATOM_ZERO 0.0
+// #define SQRT_CPU sqrt
+// #define SQRT sqrt
+
+#define ATOM_DIM float
 #define ATOM_ZERO 0.0
 #define SQRT_CPU sqrt
 #define SQRT sqrt
 
-// #define ATOM_DIM float
-// #define ATOM_ZERO 0.0
 // #define SQRT_CPU sqrtf //yeaaa dont even think about using this, it's a red herring
-// #define SQRT_CPU sqrt
-// #define SQRT __fsqrt_rn
-
 
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
