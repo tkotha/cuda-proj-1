@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 4
+#define KERNELTYPE 3
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -289,7 +289,6 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //here we make a very strong assumption that the kernel block size is 32 only!
 
 //this seems to behave correctly if the blocksize is 512 or 32
-#define HISTCOUNT 2
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							double* d_atom_x_list, double* d_atom_y_list, double* d_atom_z_list,
 							long long acnt, double res, int histSize)
@@ -307,7 +306,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
-	int lane = t & 0x1f;
 	double Lx, Ly, Lz, Rx, Ry, Rz;
 	double dist;
 
@@ -315,8 +313,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
-		sh_hist[i + histSize] = 0;
-		
 	}
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
@@ -349,9 +345,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					/* END DISTANCE FUNCTION */
 
 					
-					// atomicAdd((int*)&sh_hist[h_pos], 1);
-					atomicAdd((int*)&sh_hist[h_pos + histSize*(lane % HISTCOUNT)], 1);
-					
+					atomicAdd((int*)&sh_hist[h_pos], 1);
+					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
 			__syncthreads();
@@ -368,20 +363,17 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 			i_id = blockIdx.x * blockDim.x + i;
 			if(i_id < acnt)
 			{
-				//since we've effectively forced kernel 4 to work from warp directly, perhaps we can just directly use the registers...
+
 				/* DISTANCE FUNCTION */
-				// Rx = R[i];
-				// Ry = R[i + blockDim.x];
-				// Rz = R[i + blockDim.x*2];
-				int Rxi = __shfl_down (0xffffffff, j, i, 32);
-				int Ryi = __shfl_down (0xffffffff, j, i, 32);
-				int Rzi = __shfl_down (0xffffffff, j, i, 32);
+				Rx = R[i];
+				Ry = R[i + blockDim.x];
+				Rz = R[i + blockDim.x*2];
 				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
-				// atomicAdd((int*)&sh_hist[h_pos], 1);
-				atomicAdd((int*)&sh_hist[h_pos + histSize*(lane % HISTCOUNT)], 1);
+				atomicAdd((int*)&sh_hist[h_pos], 1);
+				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
 		}
@@ -394,7 +386,6 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		atomicAdd(&d_histogram[i], sh_hist[i]);
-		atomicAdd(&d_histogram[i], sh_hist[i + histSize]);
 	}
 
 }
@@ -534,9 +525,8 @@ int main(int argc, char **argv)
 	//Q:i should ask if the cudamalloc, memset, and memcpy should be included in time recording, or if we should do without it
 	
 	int blockcount = (int)ceil(PDH_acnt / (double) BLOCK_SIZE);
-	int histCount = HISTCOUNT;
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
-	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets*histCount;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("numbuckets: %d\n", num_buckets);
 	printf("shmemsize3:  %d\n", shmemsize3);
@@ -586,10 +576,6 @@ int main(int argc, char **argv)
 	for inputsize 10000
 		current best timings (of the accurate running configurations):
 		1) blocksize 32  : 33.01818 ms
-	
-			with lane id 'optimization': 33.25898 ms... wut?
-			ok, so the for loop may have been the culprit... but its still 33.06189 ms... certainly not any better
-
 		2) blocksize 512 : 42.04790 ms
 
 	for inputsize 512000
