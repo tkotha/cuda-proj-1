@@ -17,7 +17,7 @@
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
-#define SQRT sqrt
+#define SQRT __dsqrt_rn
 
 // #define ATOM_DIM float
 // #define ATOM_ZERO 0.0
