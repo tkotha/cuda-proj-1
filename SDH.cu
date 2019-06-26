@@ -570,16 +570,16 @@ int main(int argc, char **argv)
 
 #elif KERNELTYPE == 4
 	// PDH_kernel4 <<<blockcount, BLOCK_SIZE/*, shmemsize4*/>>> //now we try to privatize the histogram
-	if(BLOCK_SIZE == 32)
+	//if(BLOCK_SIZE == 32)
 		PDH_kernel4 <<<blockcount, BLOCK_SIZE, shmemsize4>>> //now we try to privatize the histogram
 		(d_gpu_histogram, 
 			d_atom_x_list, d_atom_y_list, d_atom_z_list, 
 			PDH_acnt, PDH_res, num_buckets);
-	else
-	{
-		printf("ERROR: kernel 4 is only accurate at block size 32! QUIT\n");
-		goto cudaFinish;
-	}
+	// else
+	// {
+	// 	printf("ERROR: kernel 4 is only accurate at block size 32! QUIT\n");
+	// 	goto cudaFinish;
+	// }
 
 	/*
 	for inputsize 10000
@@ -631,7 +631,7 @@ int main(int argc, char **argv)
 
 	printf("************* Total Running Time of Kernel = %0.5f ms *************\n", elapsedTime);
 #if KERNELTYPE == 4
-cudaFinish:
+// cudaFinish:
 #endif
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
