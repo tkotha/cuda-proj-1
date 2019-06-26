@@ -15,15 +15,17 @@
 #define COMPARE_CPU 1
 #define KERNELTYPE 4
 
-// #define ATOM_DIM double
-// #define ATOM_ZERO 0.0
-// #define SQRT_CPU sqrt
-// #define SQRT sqrt
-
-#define ATOM_DIM float
+#define ATOM_DIM double
 #define ATOM_ZERO 0.0
 #define SQRT_CPU sqrt
 #define SQRT sqrt
+
+
+//using ATOM_DIM = float is a red herring over all. It certainly explains the speedup issues, but sqrt with float is completely different, regardless of CPU/GPU differences
+// #define ATOM_DIM float
+// #define ATOM_ZERO 0.0
+// #define SQRT_CPU sqrt
+// #define SQRT sqrt
 
 // #define SQRT_CPU sqrtf //yeaaa dont even think about using this, it's a red herring
 
