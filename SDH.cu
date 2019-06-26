@@ -17,6 +17,7 @@
 
 // #define ATOM_DIM double
 // #define ATOM_ZERO 0.0
+// #define SQRT sqrt
 
 #define ATOM_DIM float
 #define ATOM_ZERO 0.0
@@ -93,7 +94,7 @@ ATOM_DIM p2p_distance(int ind1, int ind2) {
 	ATOM_DIM y2 = atom_y_list[ind2];
 	ATOM_DIM z1 = atom_z_list[ind1];
 	ATOM_DIM z2 = atom_z_list[ind2];
-	return sqrtf((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+	return SQRT((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 }
 
 //get cuda error
@@ -228,7 +229,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 					Rt *= Rt;
 					dist += Rt;
 
-					dist = sqrt(dist);
+					dist = SQRT(dist);
 
 					h_pos = (int)(dist/res);
 					atomicAdd(&d_histogram[h_pos], 1);
@@ -268,7 +269,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				Rt *= Rt;
 				dist += Rt;
 
-				dist = sqrt(dist);
+				dist = SQRT(dist);
 
 				h_pos = (int)(dist/res);
 				atomicAdd(&d_histogram[h_pos], 1);	
@@ -360,7 +361,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					Rz = Lz - Rz;
 					Rz *= Rz;
 
-					dist = sqrtf((Rx) + (Ry) + (Rz));
+					dist = SQRT((Rx) + (Ry) + (Rz));
 					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
@@ -398,7 +399,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				Rz = Lz - Rz;
 				Rz *= Rz;
 				
-				dist = sqrtf((Rx) + (Ry) + (Rz));
+				dist = SQRT((Rx) + (Ry) + (Rz));
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
