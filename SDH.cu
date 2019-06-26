@@ -630,7 +630,9 @@ int main(int argc, char **argv)
 #endif
 
 	printf("************* Total Running Time of Kernel = %0.5f ms *************\n", elapsedTime);
+#if KERNELTYPE == 4
 cudaFinish:
+#endif
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
 	cudaFree(d_atom_y_list);
