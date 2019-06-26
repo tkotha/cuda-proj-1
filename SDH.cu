@@ -361,7 +361,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					Rz = Lz - Rz;
 					Rz *= Rz;
 
-					dist = (float)SQRT( (double)((Rx) + (Ry) + (Rz)) );
+					dist = SQRT( ((Rx) + (Ry) + (Rz)) );
 					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
@@ -399,7 +399,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				Rz = Lz - Rz;
 				Rz *= Rz;
 				
-				dist = (float)SQRT( (double)((Rx) + (Ry) + (Rz)) );
+				dist = SQRT( ((Rx) + (Ry) + (Rz)) );
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
