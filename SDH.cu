@@ -14,6 +14,7 @@
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
 #define KERNELTYPE 3
+#define ATOM_DIM double
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -52,14 +53,14 @@ int BLOCK_SIZE;
 // atom * d_atom_list;
 
 //SOA version of atom_list
-double * atom_x_list;
-double * atom_y_list;
-double * atom_z_list;
+ATOM_DIM * atom_x_list;
+ATOM_DIM * atom_y_list;
+ATOM_DIM * atom_z_list;
 
 //SOA version of d_atom_list
-double * d_atom_x_list;
-double * d_atom_y_list;
-double * d_atom_z_list;
+ATOM_DIM * d_atom_x_list;
+ATOM_DIM * d_atom_y_list;
+ATOM_DIM * d_atom_z_list;
 
 
 /* These are for an old way of tracking time */
@@ -70,7 +71,7 @@ struct timeval startTime, endTime;
 /* 
 	distance of two points in the atom_list 
 */
-double p2p_distance(int ind1, int ind2) {
+ATOM_DIM p2p_distance(int ind1, int ind2) {
 	
 	// double x1 = atom_list[ind1].x_pos;
 	// double x2 = atom_list[ind2].x_pos;
@@ -78,12 +79,12 @@ double p2p_distance(int ind1, int ind2) {
 	// double y2 = atom_list[ind2].y_pos;
 	// double z1 = atom_list[ind1].z_pos;
 	// double z2 = atom_list[ind2].z_pos;
-	double x1 = atom_x_list[ind1];
-	double x2 = atom_x_list[ind2];
-	double y1 = atom_y_list[ind1];
-	double y2 = atom_y_list[ind2];
-	double z1 = atom_z_list[ind1];
-	double z2 = atom_z_list[ind2];
+	ATOM_DIM x1 = atom_x_list[ind1];
+	ATOM_DIM x2 = atom_x_list[ind2];
+	ATOM_DIM y1 = atom_y_list[ind1];
+	ATOM_DIM y2 = atom_y_list[ind2];
+	ATOM_DIM z1 = atom_z_list[ind1];
+	ATOM_DIM z2 = atom_z_list[ind2];
 	return sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 }
 
@@ -102,7 +103,7 @@ double p2p_distance(int ind1, int ind2) {
 */
 int PDH_baseline() {
 	int i, j, h_pos;
-	double dist;
+	ATOM_DIM dist;
 	
 	for(i = 0; i < PDH_acnt; i++) {
 		for(j = i+1; j < PDH_acnt; j++) {
@@ -123,18 +124,18 @@ int PDH_baseline() {
 */
 
 __global__ void PDH_kernel(unsigned long long* d_histogram, 
-							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM * d_atom_z_list, 
 							long long acnt, double res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
-	double dist;
-	double x1;
-	double x2;
-	double y1;
-	double y2;
-	double z1;
-	double z2;
+	ATOM_DIM dist;
+	ATOM_DIM x1;
+	ATOM_DIM x2;
+	ATOM_DIM y1;
+	ATOM_DIM y2;
+	ATOM_DIM z1;
+	ATOM_DIM z2;
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
