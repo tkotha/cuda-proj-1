@@ -15,6 +15,7 @@
 #define COMPARE_CPU 1
 #define KERNELTYPE 3
 #define ATOM_DIM double
+#define ATOM_ZERO 0.0
 /* descriptors for single atom in the tree */
 // typedef struct atomdesc {
 // 	double x_pos;
@@ -203,7 +204,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 					// Ry = R[j + blockDim.x];
 					// Rz = R[j + blockDim.x*2];
 					// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-					dist = 0.0;
+					dist = ATOM_ZERO;
 					//dist = 0f;
 					//Rx
 					Rt = Lx - R[j];
@@ -244,7 +245,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				// Ry = R[i + blockDim.x];
 				// Rz = R[i + blockDim.x*2];
 				// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-				dist = 0.0;
+				dist = ATOM_ZERO;
 				//Rx
 				Rt = Lx - R[i];
 				Rt *= Rt;
