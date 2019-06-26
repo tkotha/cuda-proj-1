@@ -298,6 +298,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 //here we make a very strong assumption that the kernel block size is 32 only!
 
 //this seems to behave correctly if the blocksize is 512 or 32
+#define HIST_COUNT 2
+
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM* d_atom_z_list,
 							long long acnt, ATOM_DIM res, int histSize)
@@ -315,6 +317,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
+	int l = t & 0x1f;
 	ATOM_DIM Lx, Ly, Lz, Rx, Ry, Rz;
 	ATOM_DIM dist;
 
@@ -322,6 +325,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	for(i = t; i < histSize; i += blockDim.x)
 	{
 		sh_hist[i] = 0;
+		sh_hist[i + histSize] = 0;
 	}
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
@@ -354,7 +358,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					/* END DISTANCE FUNCTION */
 
 					
-					atomicAdd((int*)&sh_hist[h_pos], 1);
+					atomicAdd((int*)&sh_hist[h_pos + (l % HIST_COUNT)*histSize], 1);
 					// atomicAdd(&d_histogram[h_pos], 1);
 				}
 			}
@@ -381,7 +385,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
-				atomicAdd((int*)&sh_hist[h_pos], 1);
+				atomicAdd((int*)&sh_hist[h_pos+ (l % HIST_COUNT)*histSize], 1);
 				// atomicAdd(&d_histogram[h_pos], 1);
 			}
 			
@@ -394,6 +398,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	__syncthreads();
 	for(i = t; i < histSize; i += blockDim.x)
 	{
+		atomicAdd(&d_histogram[i], sh_hist[i]);
 		atomicAdd(&d_histogram[i], sh_hist[i]);
 	}
 
@@ -535,7 +540,7 @@ int main(int argc, char **argv)
 	
 	int blockcount = (int)ceil(PDH_acnt / (ATOM_DIM) BLOCK_SIZE);
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(ATOM_DIM);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
-	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(ATOM_DIM) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(ATOM_DIM) + sizeof(/*unsigned long long*/ int)*num_buckets*HIST_COUNT;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("numbuckets: %d\n", num_buckets);
 	printf("shmemsize3:  %d\n", shmemsize3);
