@@ -19,7 +19,7 @@
 // #define ATOM_ZERO 0.0
 
 #define ATOM_DIM float
-#define ATOM_ZERO 0f
+#define ATOM_ZERO 0
 
 
 /* descriptors for single atom in the tree */
