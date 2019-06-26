@@ -20,6 +20,7 @@
 
 #define ATOM_DIM float
 #define ATOM_ZERO 0
+#define SQRT sqrtf
 
 
 /* descriptors for single atom in the tree */
@@ -92,7 +93,7 @@ ATOM_DIM p2p_distance(int ind1, int ind2) {
 	ATOM_DIM y2 = atom_y_list[ind2];
 	ATOM_DIM z1 = atom_z_list[ind1];
 	ATOM_DIM z2 = atom_z_list[ind2];
-	return sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+	return sqrtf((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 }
 
 //get cuda error
