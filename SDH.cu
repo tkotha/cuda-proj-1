@@ -348,10 +348,15 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				{
 					/* DISTANCE FUNCTION */
 					Rx = R[j];
-					Ry = R[j + blockDim.x];
-					Rz = R[j + blockDim.x*2];
+					Rx = Lx - Rx;
 
-					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+					Ry = R[j + blockDim.x];
+					Ry = Ly - Ry;
+
+					Rz = R[j + blockDim.x*2];
+					Rz = Lz - Rz;
+
+					dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
 					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
@@ -377,9 +382,15 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 
 				/* DISTANCE FUNCTION */
 				Rx = R[i];
+				Rx = Lx - Rx;
+
 				Ry = R[i + blockDim.x];
+				Ry = Ly - Ry;
+				
 				Rz = R[i + blockDim.x*2];
-				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+				Rz = Lz - Rz;
+				
+				dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
