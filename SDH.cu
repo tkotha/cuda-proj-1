@@ -54,7 +54,7 @@ unsigned long long * diff_histogram;
 
 long long	PDH_acnt;	/* total number of data points            */
 int num_buckets;		/* total number of buckets in the histogram */
-double   PDH_res;		/* value of w                             */
+ATOM_DIM   PDH_res;		/* value of w                             */
 int BLOCK_SIZE;
 // atom * atom_list;		/* list of all data points                */
 // atom * d_atom_list;
@@ -132,7 +132,7 @@ int PDH_baseline() {
 
 __global__ void PDH_kernel(unsigned long long* d_histogram, 
 							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM * d_atom_z_list, 
-							long long acnt, double res)
+							long long acnt, ATOM_DIM res)
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
@@ -170,7 +170,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 //update: now the kernel is correct, and we match junyi's performance
 __global__ void PDH_kernel3(unsigned long long* d_histogram, 
 							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM * d_atom_z_list, 
-							long long acnt, double res)//,
+							long long acnt, ATOM_DIM res)//,
 							 //int numBlocks, int blockSize)
 {
 	extern __shared__ ATOM_DIM R[];	
@@ -302,7 +302,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
 							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM* d_atom_z_list,
-							long long acnt, double res, int histSize)
+							long long acnt, ATOM_DIM res, int histSize)
 {
 	extern __shared__ ATOM_DIM shmem[];
 	//for now assume a block count of 157 and 80 (based on 10000 pts, 500.0 resolution, and 64 blocks)
@@ -318,7 +318,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i_id, j_id;
 	int t = threadIdx.x;
 	ATOM_DIM Lx, Ly, Lz, Rx, Ry, Rz;
-	double dist;
+	ATOM_DIM dist;
 
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
@@ -356,7 +356,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					Rz = R[j + blockDim.x*2];
 					Rz = Lz - Rz;
 
-					dist = sqrt( (double)((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz)) );
+					dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
 					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
@@ -390,7 +390,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				Rz = R[i + blockDim.x*2];
 				Rz = Lz - Rz;
 				
-				dist = sqrt( (double)((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz)) );
+				dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
