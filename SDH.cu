@@ -357,7 +357,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					Rz = Lz - Rz;
 
 					dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
-					h_pos = (int)(dist/res);
+					h_pos = (int)((double)dist/res);
 					/* END DISTANCE FUNCTION */
 
 					
@@ -393,7 +393,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
 				/* END DISTANCE FUNCTION */
 
-				h_pos = (int)(dist/res);
+				h_pos = (int)((double)dist/res);
 				atomicAdd((int*)&sh_hist[h_pos], 1);
 				// atomicAdd(&d_histogram[h_pos], 1);
 			}
