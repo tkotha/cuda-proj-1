@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 3
+#define KERNELTYPE 4
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
@@ -349,14 +349,17 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					/* DISTANCE FUNCTION */
 					Rx = R[j];
 					Rx = Lx - Rx;
+					Rx *= Rx;
 
 					Ry = R[j + blockDim.x];
 					Ry = Ly - Ry;
+					Ry *= Ry;
 
 					Rz = R[j + blockDim.x*2];
 					Rz = Lz - Rz;
+					Rz *= Rz;
 
-					dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
+					dist = sqrt((Rx) + (Ry) + (Rz));
 					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
@@ -383,14 +386,18 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				/* DISTANCE FUNCTION */
 				Rx = R[i];
 				Rx = Lx - Rx;
+				Rx *= Rx;
+
 
 				Ry = R[i + blockDim.x];
 				Ry = Ly - Ry;
+				Ry *= Ry;
 				
 				Rz = R[i + blockDim.x*2];
 				Rz = Lz - Rz;
+				Rz *= Rz;
 				
-				dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
+				dist = sqrt((Rx) + (Ry) + (Rz));
 				/* END DISTANCE FUNCTION */
 
 				h_pos = (int)(dist/res);
