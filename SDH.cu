@@ -17,6 +17,7 @@
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
+#define SQRT_CPU sqrt
 #define SQRT __dsqrt_rn
 
 // #define ATOM_DIM float
@@ -94,7 +95,7 @@ ATOM_DIM p2p_distance(int ind1, int ind2) {
 	ATOM_DIM y2 = atom_y_list[ind2];
 	ATOM_DIM z1 = atom_z_list[ind1];
 	ATOM_DIM z2 = atom_z_list[ind2];
-	return SQRT((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+	return SQRT_CPU((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 }
 
 //get cuda error
