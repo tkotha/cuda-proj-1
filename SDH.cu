@@ -15,15 +15,15 @@
 #define COMPARE_CPU 1
 #define KERNELTYPE 4
 
-// #define ATOM_DIM double
-// #define ATOM_ZERO 0.0
-// #define SQRT_CPU sqrt
-// #define SQRT __dsqrt_rn
-
-#define ATOM_DIM float
+#define ATOM_DIM double
 #define ATOM_ZERO 0.0
 #define SQRT_CPU sqrt
-#define SQRT __fsqrt_rn
+#define SQRT __dsqrt_rn
+
+// #define ATOM_DIM float
+// #define ATOM_ZERO 0.0
+// #define SQRT_CPU sqrt
+// #define SQRT __fsqrt_rn
 
 
 /* descriptors for single atom in the tree */
