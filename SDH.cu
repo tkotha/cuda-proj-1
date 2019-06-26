@@ -318,7 +318,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i_id, j_id;
 	int t = threadIdx.x;
 	ATOM_DIM Lx, Ly, Lz, Rx, Ry, Rz;
-	ATOM_DIM dist;
+	double dist;
 
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
@@ -356,8 +356,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 					Rz = R[j + blockDim.x*2];
 					Rz = Lz - Rz;
 
-					dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
-					h_pos = (int)((double)dist/res);
+					dist = sqrt( (double)((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz)) );
+					h_pos = (int)(dist/res);
 					/* END DISTANCE FUNCTION */
 
 					
@@ -390,10 +390,10 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 				Rz = R[i + blockDim.x*2];
 				Rz = Lz - Rz;
 				
-				dist = sqrt((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz));
+				dist = sqrt( (double)((Rx)*(Rx) + (Ry)*(Ry) + (Rz)*(Rz)) );
 				/* END DISTANCE FUNCTION */
 
-				h_pos = (int)((double)dist/res);
+				h_pos = (int)(dist/res);
 				atomicAdd((int*)&sh_hist[h_pos], 1);
 				// atomicAdd(&d_histogram[h_pos], 1);
 			}
