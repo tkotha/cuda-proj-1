@@ -19,7 +19,7 @@
 // #define ATOM_ZERO 0.0
 
 #define ATOM_DIM float
-#define ATOM_ZERO 0
+#define ATOM_ZERO 0.0
 #define SQRT sqrtf
 
 
