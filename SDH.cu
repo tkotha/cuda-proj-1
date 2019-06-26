@@ -15,11 +15,11 @@
 #define COMPARE_CPU 1
 #define KERNELTYPE 1
 
-#define ATOM_DIM double
-#define ATOM_ZERO 0.0
+// #define ATOM_DIM double
+// #define ATOM_ZERO 0.0
 
-// #define ATOM_DIM float
-// #define ATOM_ZERO 0
+#define ATOM_DIM float
+#define ATOM_ZERO 0
 
 
 /* descriptors for single atom in the tree */
@@ -136,7 +136,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 {
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
-	ATOM_DIM dist;
+	double dist;
 	ATOM_DIM x1;
 	ATOM_DIM x2;
 	ATOM_DIM y1;
@@ -152,7 +152,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 			y2 = d_atom_y_list[j];
 			z1 = d_atom_z_list[id];
 			z2 = d_atom_z_list[j];
-			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			dist = sqrt( (double) ( (x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2) ) );
 			h_pos = (int) (dist / res);
 			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 			atomicAdd(&d_histogram[h_pos], 1);
