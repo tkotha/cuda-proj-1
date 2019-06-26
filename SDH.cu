@@ -497,9 +497,9 @@ int main(int argc, char **argv)
 	srand(1);
 	/* generate data following a uniform distribution */
 	for(i = 0;  i < PDH_acnt; i++) {
-		atom_x_list[i] = ((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE;
-		atom_y_list[i] = ((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE;
-		atom_z_list[i] = ((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE;
+		atom_x_list[i] = (ATOM_DIM)(((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE);
+		atom_y_list[i] = (ATOM_DIM)(((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE);
+		atom_z_list[i] = (ATOM_DIM)(((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE);
 	}
 	/* start counting time */
 
