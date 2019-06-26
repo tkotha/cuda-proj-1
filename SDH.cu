@@ -13,15 +13,15 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 1
+#define KERNELTYPE 4
 
-#define ATOM_DIM double
+// #define ATOM_DIM double
+// #define ATOM_ZERO 0.0
+// #define SQRT sqrt
+
+#define ATOM_DIM float
 #define ATOM_ZERO 0.0
 #define SQRT sqrtf
-
-// #define ATOM_DIM float
-// #define ATOM_ZERO 0.0
-// #define SQRT sqrtf
 
 
 /* descriptors for single atom in the tree */
