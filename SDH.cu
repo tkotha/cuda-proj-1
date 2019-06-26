@@ -17,12 +17,12 @@
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
-#define SQRT_CPU sqrtf
-#define SQRT __dsqrt_rn
+#define SQRT_CPU sqrt
+#define SQRT sqrt
 
 // #define ATOM_DIM float
 // #define ATOM_ZERO 0.0
-// #define SQRT_CPU sqrt
+// #define SQRT_CPU sqrt //yeaaa dont even think about using this, it's a red herring
 // #define SQRT __fsqrt_rn
 
 
