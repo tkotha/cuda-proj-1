@@ -153,7 +153,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 			z1 = d_atom_z_list[id];
 			z2 = d_atom_z_list[j];
 			dist = sqrt( (double) ( (x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2) ) );
-			h_pos = (int) (dist / res);
+			h_pos = (int) ((float)dist / res);
 			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 			atomicAdd(&d_histogram[h_pos], 1);
 		}
