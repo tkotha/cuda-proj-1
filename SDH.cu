@@ -162,11 +162,11 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 //ok, so syncing threads made the 6400 point case correct, but we are still dead wrong with the 10000 point case for some reason
 //update: now the kernel is correct, and we match junyi's performance
 __global__ void PDH_kernel3(unsigned long long* d_histogram, 
-							double* d_atom_x_list, double* d_atom_y_list, double * d_atom_z_list, 
+							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM * d_atom_z_list, 
 							long long acnt, double res)//,
 							 //int numBlocks, int blockSize)
 {
-	extern __shared__ double R[];	
+	extern __shared__ ATOM_DIM R[];	
 							//the size of this should be 3*BLOCK_SIZE*sizeof(double), to house the three arrays in shared memory	
 							//where t is a specific index into the 'atom' array
 							//
@@ -177,8 +177,8 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	//int i_id, j_id;
 	// int cur_id;
-	double  Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
-	double dist;
+	ATOM_DIM  Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
+	ATOM_DIM dist;
 	if(cur_id < acnt)
 	{
 		Lx = d_atom_x_list[cur_id];
@@ -204,6 +204,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 					// Rz = R[j + blockDim.x*2];
 					// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
 					dist = 0.0;
+					//dist = 0f;
 					//Rx
 					Rt = Lx - R[j];
 					Rt *= Rt;
@@ -291,14 +292,14 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 
 //this seems to behave correctly if the blocksize is 512 or 32
 __global__ void PDH_kernel4(unsigned long long* d_histogram,
-							double* d_atom_x_list, double* d_atom_y_list, double* d_atom_z_list,
+							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM* d_atom_z_list,
 							long long acnt, double res, int histSize)
 {
-	extern __shared__ double shmem[];
+	extern __shared__ ATOM_DIM shmem[];
 	//for now assume a block count of 157 and 80 (based on 10000 pts, 500.0 resolution, and 64 blocks)
 	// __shared__ int* shmem[(157*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*80];
 	// double* R = (double*)shmem;
-	double* R = shmem;
+	ATOM_DIM* R = shmem;
 	//2 copies of histogram, but we use one pointer
 	int * sh_hist = (int *)(R + 3*blockDim.x);
 
@@ -307,8 +308,8 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	int i_id, j_id;
 	int t = threadIdx.x;
-	double Lx, Ly, Lz, Rx, Ry, Rz;
-	double dist;
+	ATOM_DIM Lx, Ly, Lz, Rx, Ry, Rz;
+	ATOM_DIM dist;
 
 	//initialize the shared histogram to 0
 	for(i = t; i < histSize; i += blockDim.x)
@@ -460,18 +461,18 @@ int main(int argc, char **argv)
 	histogram =    (unsigned long long *)malloc(sizeof(unsigned long long)*num_buckets);
 
 	// atom_list = (atom *)malloc(sizeof(atom)*PDH_acnt);
-	atom_x_list = (double *)malloc(sizeof(double)*PDH_acnt);
-	atom_y_list = (double *)malloc(sizeof(double)*PDH_acnt);
-	atom_z_list = (double *)malloc(sizeof(double)*PDH_acnt);
+	atom_x_list = (ATOM_DIM *)malloc(sizeof(ATOM_DIM)*PDH_acnt);
+	atom_y_list = (ATOM_DIM *)malloc(sizeof(ATOM_DIM)*PDH_acnt);
+	atom_z_list = (ATOM_DIM *)malloc(sizeof(ATOM_DIM)*PDH_acnt);
 
 
 	
 	srand(1);
 	/* generate data following a uniform distribution */
 	for(i = 0;  i < PDH_acnt; i++) {
-		atom_x_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-		atom_y_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
-		atom_z_list[i] = ((double)(rand()) / RAND_MAX) * BOX_SIZE;
+		atom_x_list[i] = ((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE;
+		atom_y_list[i] = ((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE;
+		atom_z_list[i] = ((ATOM_DIM)(rand()) / RAND_MAX) * BOX_SIZE;
 	}
 	/* start counting time */
 
@@ -507,14 +508,14 @@ int main(int argc, char **argv)
 	cudaEventCreate(&stop);
 	cudaEventRecord(start, 0);
 
-	cudaMalloc((void**)&d_atom_x_list, sizeof(double)*PDH_acnt);
-	cudaMemcpy(d_atom_x_list, atom_x_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_atom_x_list, sizeof(ATOM_DIM)*PDH_acnt);
+	cudaMemcpy(d_atom_x_list, atom_x_list, sizeof(ATOM_DIM)*PDH_acnt, cudaMemcpyHostToDevice);
 
-	cudaMalloc((void**)&d_atom_y_list, sizeof(double)*PDH_acnt);
-	cudaMemcpy(d_atom_y_list, atom_y_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_atom_y_list, sizeof(ATOM_DIM)*PDH_acnt);
+	cudaMemcpy(d_atom_y_list, atom_y_list, sizeof(ATOM_DIM)*PDH_acnt, cudaMemcpyHostToDevice);
 
-	cudaMalloc((void**)&d_atom_z_list, sizeof(double)*PDH_acnt);
-	cudaMemcpy(d_atom_z_list, atom_z_list, sizeof(double)*PDH_acnt, cudaMemcpyHostToDevice);
+	cudaMalloc((void**)&d_atom_z_list, sizeof(ATOM_DIM)*PDH_acnt);
+	cudaMemcpy(d_atom_z_list, atom_z_list, sizeof(ATOM_DIM)*PDH_acnt, cudaMemcpyHostToDevice);
 
 
 	//allocate the histogram data on the device
@@ -525,9 +526,9 @@ int main(int argc, char **argv)
 
 	//Q:i should ask if the cudamalloc, memset, and memcpy should be included in time recording, or if we should do without it
 	
-	int blockcount = (int)ceil(PDH_acnt / (double) BLOCK_SIZE);
-	int shmemsize3 = BLOCK_SIZE*3*sizeof(double);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
-	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(double) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int blockcount = (int)ceil(PDH_acnt / (ATOM_DIM) BLOCK_SIZE);
+	int shmemsize3 = BLOCK_SIZE*3*sizeof(ATOM_DIM);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(ATOM_DIM) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("numbuckets: %d\n", num_buckets);
 	printf("shmemsize3:  %d\n", shmemsize3);
