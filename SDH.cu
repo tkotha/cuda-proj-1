@@ -186,7 +186,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	{
 		sh_hist[j] = 0;
 	}
-
+	__syncthreads();
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
@@ -203,6 +203,7 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 			atomicAdd(&sh_hist[h_pos],1);
 		}
 
+	__syncthreads();
 	for(j = threadIdx.x; j < histSize; j += blockDim.x)
 	{
 		atomicAdd(&d_histogram[j], sh_hist[j]);
@@ -399,6 +400,7 @@ __global__ void PDH_kernel4(unsigned long long* d_histogram,
 	{
 		sh_hist[i] = 0;
 	}
+	__syncthreads();
 	//do tiled algorithm with sh_hist
 	if(id < acnt)
 	{
