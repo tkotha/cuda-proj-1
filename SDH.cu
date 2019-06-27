@@ -176,22 +176,35 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
 	ATOM_DIM dist;
-	ATOM_DIM x1;
-	ATOM_DIM x2;
-	ATOM_DIM y1;
-	ATOM_DIM y2;
-	ATOM_DIM z1;
-	ATOM_DIM z2;
+	ATOM_DIM t1;
+	ATOM_DIM t2;
+	// ATOM_DIM y1;
+	// ATOM_DIM y2;
+	// ATOM_DIM z1;
+	// ATOM_DIM z2;
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
-			x1 = d_atom_x_list[id];
-			x2 = d_atom_x_list[j];
-			y1 = d_atom_y_list[id];
-			y2 = d_atom_y_list[j];
-			z1 = d_atom_z_list[id];
-			z2 = d_atom_z_list[j];
-			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			dist = ATOM_ZERO;
+			//xs
+			t1 = d_atom_x_list[id];
+			t2 = d_atom_y_list[j];
+			t1 = t1 - t2;
+			dist += t1*t1;
+
+			//ys
+			t1 = d_atom_y_list[id];
+			t2 = d_atom_y_list[j];
+			t1 = t1 - t2;
+			dist += t1*t1;
+
+			//zs
+			t1 = d_atom_z_list[id];
+			t2 = d_atom_z_list[j];
+			t1 = t1 - t2;
+			dist += t1*t1;
+
+			dist = sqrt(dist);
 			h_pos = (int) (dist / res);
 			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 			atomicAdd(&d_histogram[h_pos], 1);
