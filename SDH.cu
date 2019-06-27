@@ -550,7 +550,7 @@ int isNumber(char * arg)
 	int n = 0;
 	while(char[n] != '\0')
 	{
-		if(!isdigit(arg[n]) && arg[n] != '.')
+		if(!(arg[n]>='0' && arg[n] <='9') && arg[n] != '.')
 			return 0;
 	}
 	return 1;
