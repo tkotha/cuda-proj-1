@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 0
-#define KERNELTYPE 1
+#define KERNELTYPE 2
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
@@ -165,6 +165,40 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 			atomicAdd(&d_histogram[h_pos], 1);
 		}
 }
+
+
+//a naive kernel with privatization
+__global__ void PDH_kernel2(unsigned long long* d_histogram, 
+							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM * d_atom_z_list, 
+							long long acnt, ATOM_DIM res, int histSize)
+{
+	extern __shared__ int sh_hist[];
+	int id = blockIdx.x*blockDim.x + threadIdx.x;
+	int j, h_pos;
+	ATOM_DIM dist;
+	ATOM_DIM x1;
+	ATOM_DIM x2;
+	ATOM_DIM y1;
+	ATOM_DIM y2;
+	ATOM_DIM z1;
+	ATOM_DIM z2;
+	if(id < acnt) 
+		for(j = id+1; j < acnt; j++)
+		{
+			x1 = d_atom_x_list[id];
+			x2 = d_atom_x_list[j];
+			y1 = d_atom_y_list[id];
+			y2 = d_atom_y_list[j];
+			z1 = d_atom_z_list[id];
+			z2 = d_atom_z_list[j];
+			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			h_pos = (int) (dist / res);
+			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
+			atomicAdd(&d_histogram[h_pos], 1);
+		}
+}
+
+
 
 /*
 	An attempt at an improved version of the kernel
@@ -561,10 +595,12 @@ int main(int argc, char **argv)
 	//Q:i should ask if the cudamalloc, memset, and memcpy should be included in time recording, or if we should do without it
 	
 	int blockcount = (int)ceil(PDH_acnt / (double) BLOCK_SIZE);
+	int shmemsize2 = sizeof(int)*num_buckets;
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(ATOM_DIM);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(ATOM_DIM) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	printf("blockcount: %d\n",blockcount);
 	printf("numbuckets: %d\n", num_buckets);
+	printf("shmemsize2:  %d\n", shmemsize2);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
 
@@ -578,6 +614,9 @@ int main(int argc, char **argv)
 	//run the kernel
 #if KERNELTYPE == 1
 	PDH_kernel<<<blockcount, BLOCK_SIZE>>>(d_gpu_histogram, d_atom_x_list, d_atom_y_list, d_atom_z_list, PDH_acnt, PDH_res);
+
+#elif KERNELTYPE == 2
+	PDH_kernel2<<<blockcount, BLOCK_SIZE, shmemsize2>>>(d_gpu_histogram,  d_atom_x_list,  d_atom_y_list,  d_atom_z_list, PDH_acnt, PDH_res, num_buckets);
 
 #elif KERNELTYPE == 3
 	PDH_kernel3 <<<blockcount, BLOCK_SIZE, shmemsize3>>> //now we try and use just R
