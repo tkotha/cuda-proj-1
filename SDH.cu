@@ -545,10 +545,16 @@ void output_histogram(unsigned long long* histogram){
 		else printf("| ");
 	}
 }
-int isNumber(char const* arg)
+int isNumber(char * arg)
 {
-	int n;
-	return (sscanf(arg, "%d", &n) == 1);
+	int n = 0;
+	while(char[n] != '\0')
+	{
+		if(!isdigit(arg[n]) && arg[n] != '.')
+			return 0;
+	}
+	return 1;
+
 }
 
 int main(int argc, char **argv)
