@@ -13,7 +13,7 @@
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define COMPARE_CPU 1
-#define KERNELTYPE 2
+#define KERNELTYPE 3
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
@@ -159,7 +159,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 			y2 = d_atom_y_list[j];
 			z1 = d_atom_z_list[id];
 			z2 = d_atom_z_list[j];
-			dist = sqrt((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
+			dist = SQRT((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
 			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 			atomicAdd(&d_histogram[h_pos], 1);
@@ -176,35 +176,22 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	int id = blockIdx.x*blockDim.x + threadIdx.x;
 	int j, h_pos;
 	ATOM_DIM dist;
-	ATOM_DIM t1;
-	ATOM_DIM t2;
-	// ATOM_DIM y1;
-	// ATOM_DIM y2;
-	// ATOM_DIM z1;
-	// ATOM_DIM z2;
+	ATOM_DIM x1;
+	ATOM_DIM x2;
+	ATOM_DIM y1;
+	ATOM_DIM y2;
+	ATOM_DIM z1;
+	ATOM_DIM z2;
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
-			dist = ATOM_ZERO;
-			//xs
-			t1 = d_atom_x_list[id];
-			t2 = d_atom_y_list[j];
-			t1 = t1 - t2;
-			dist += t1*t1;
-
-			//ys
-			t1 = d_atom_y_list[id];
-			t2 = d_atom_y_list[j];
-			t1 = t1 - t2;
-			dist += t1*t1;
-
-			//zs
-			t1 = d_atom_z_list[id];
-			t2 = d_atom_z_list[j];
-			t1 = t1 - t2;
-			dist += t1*t1;
-
-			dist = sqrt(dist);
+			x1 = d_atom_x_list[id];
+			x2 = d_atom_x_list[j];
+			y1 = d_atom_y_list[id];
+			y2 = d_atom_y_list[j];
+			z1 = d_atom_z_list[id];
+			z2 = d_atom_z_list[j];
+			dist = SQRT((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
 			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
 			atomicAdd(&d_histogram[h_pos], 1);
@@ -271,7 +258,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 	int i, j, h_pos;
 	//int i_id, j_id;
 	// int cur_id;
-	ATOM_DIM  Lx, Ly, Lz, Rt;//, Rx, Ry, Rz;
+	ATOM_DIM  Lx, Ly, Lz, Rx, Ry, Rz;
 	ATOM_DIM dist;
 	if(cur_id < acnt)
 	{
@@ -293,28 +280,11 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				cur_id = i * blockDim.x + j;	//now this prevents us from writing junk data for thread j
 				if(cur_id < acnt)
 				{
-					// Rx = R[j];
-					// Ry = R[j + blockDim.x];
-					// Rz = R[j + blockDim.x*2];
-					// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-					dist = ATOM_ZERO;
-					//dist = 0f;
-					//Rx
-					Rt = Lx - R[j];
-					Rt *= Rt;
-					dist += Rt;
-
-					//Ry
-					Rt = Ly - R[j + blockDim.x];
-					Rt *= Rt;
-					dist += Rt;
-
-					//Rz
-					Rt = Lz - R[j + blockDim.x*2];
-					Rt *= Rt;
-					dist += Rt;
-
-					dist = SQRT(dist);
+					Rx = R[j];
+					Ry = R[j + blockDim.x];
+					Rz = R[j + blockDim.x*2];
+					dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+					
 
 					h_pos = (int)(dist/res);
 					atomicAdd(&d_histogram[h_pos], 1);
@@ -334,11 +304,23 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 			cur_id = blockIdx.x * blockDim.x + i;	//we only proceed with valid threads for each thread i
 			if(cur_id < acnt)
 			{
-				// Rx = R[i];
-				// Ry = R[i + blockDim.x];
-				// Rz = R[i + blockDim.x*2];
-				// dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
-				dist = ATOM_ZERO;
+				Rx = R[i];
+				Ry = R[i + blockDim.x];
+				Rz = R[i + blockDim.x*2];
+				dist = sqrt((Lx - Rx)*(Lx-Rx) + (Ly - Ry)*(Ly - Ry) + (Lz - Rz)*(Lz - Rz));
+				
+
+				h_pos = (int)(dist/res);
+				atomicAdd(&d_histogram[h_pos], 1);	
+			}
+		}
+	}
+}
+
+
+/*
+scrap
+dist = ATOM_ZERO;
 				//Rx
 				Rt = Lx - R[i];
 				Rt *= Rt;
@@ -355,13 +337,7 @@ __global__ void PDH_kernel3(unsigned long long* d_histogram,
 				dist += Rt;
 
 				dist = SQRT(dist);
-
-				h_pos = (int)(dist/res);
-				atomicAdd(&d_histogram[h_pos], 1);	
-			}
-		}
-	}
-}
+*/
 
 //now for histogram privitization
 //step 1: have it be correct -- apparently it's fine with multiples of block size, but it has very tiny difference with non multiples
