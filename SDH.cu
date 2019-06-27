@@ -135,6 +135,7 @@ int PDH_baseline() {
 
 /*
 	SDH kernel - a really crappy one
+	this is correct
 */
 
 __global__ void PDH_kernel(unsigned long long* d_histogram, 
@@ -168,6 +169,7 @@ __global__ void PDH_kernel(unsigned long long* d_histogram,
 
 
 //a naive kernel with privatization
+//this is correct
 __global__ void PDH_kernel2(unsigned long long* d_histogram, 
 							ATOM_DIM* d_atom_x_list, ATOM_DIM* d_atom_y_list, ATOM_DIM * d_atom_z_list, 
 							long long acnt, ATOM_DIM res, int histSize)
@@ -248,7 +250,7 @@ dist = ATOM_ZERO;
 /*
 	An attempt at an improved version of the kernel
 	step 1: get block tiling to work
-	step 2: get histogram privitization to work
+	this is correct
 */
 
 //note: when we go for correctness, this is the kernel we will work from. This way we have the best chance of finding the edge case easier
