@@ -182,6 +182,11 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 	ATOM_DIM y2;
 	ATOM_DIM z1;
 	ATOM_DIM z2;
+	for(j = threadIdx.x; j < histSize; j += blockDim.x)
+	{
+		sh_hist[j] = 0;
+	}
+
 	if(id < acnt) 
 		for(j = id+1; j < acnt; j++)
 		{
@@ -194,8 +199,14 @@ __global__ void PDH_kernel2(unsigned long long* d_histogram,
 			dist = SQRT((x1 - x2)*(x1-x2) + (y1 - y2)*(y1 - y2) + (z1 - z2)*(z1 - z2));
 			h_pos = (int) (dist / res);
 			// atomicAdd((unsigned long long int*)&d_histogram[h_pos].d_cnt,1);
-			atomicAdd(&d_histogram[h_pos], 1);
+			// atomicAdd(&d_histogram[h_pos], 1);
+			atomicAdd(&sh_hist[h_pos],1);
 		}
+
+	for(j = threadIdx.x; j < histSize; j += blockDim.x)
+	{
+		atomicAdd(&d_histogram[j], sh_hist[j]);
+	}
 }
 
 /*
