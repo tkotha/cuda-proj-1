@@ -14,9 +14,9 @@
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
 #define DEBUG 0
 #define COMPARE_CPU 0
-#define KERNELTYPE 2
+#define KERNELTYPE 3
 //currently kernel 3 runs the fastest. If we're lucky, itll be kernel 2...
-//of the 4 kernels, I will be choosing between 2 and 3
+//of the 4 kernels, I will be choosing 3
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
