@@ -547,13 +547,10 @@ void output_histogram(unsigned long long* histogram){
 }
 int isNumber(char * arg)
 {
-	int n = 0;
-	while( arg[n] != '\0')
-	{
-		if(!(arg[n]>='0' && arg[n] <='9') && arg[n] != '.')
-			return 0;
-	}
-	return 1;
+	int n;
+	char ch;
+	
+	return sscanf(arg, "%d%c", &n, &ch) == 1;
 
 }
 
