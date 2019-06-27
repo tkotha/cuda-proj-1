@@ -12,9 +12,9 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
-#define DEBUG 1
+#define DEBUG 0
 #define COMPARE_CPU 0
-#define KERNELTYPE 2
+#define KERNELTYPE 3
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
