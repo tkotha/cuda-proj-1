@@ -15,6 +15,8 @@
 #define DEBUG 0
 #define COMPARE_CPU 0
 #define KERNELTYPE 3
+//currently kernel 3 runs the fastest. If we're lucky, itll be kernel 2...
+//of the 4 kernels, I will be choosing between 2 and 3
 
 #define ATOM_DIM double
 #define ATOM_ZERO 0.0
@@ -752,7 +754,7 @@ int main(int argc, char **argv)
 
 #endif
 
-	printf("************* Total Running Time of Kernel = %0.5f ms *************\n", elapsedTime);
+	printf("************* Total Running Time of Kernel = %0.5f sec *************\n", elapsedTime/1000);
 
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
