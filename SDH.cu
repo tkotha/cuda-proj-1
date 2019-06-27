@@ -12,6 +12,7 @@
 #include <cuda.h>
 
 #define BOX_SIZE	23000 /* size of the data box on one dimension            */
+#define DEBUG 1
 #define COMPARE_CPU 0
 #define KERNELTYPE 2
 
@@ -653,12 +654,13 @@ int main(int argc, char **argv)
 	int shmemsize2 = sizeof(int)*num_buckets;
 	int shmemsize3 = BLOCK_SIZE*3*sizeof(ATOM_DIM);	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
 	int shmemsize4 = (BLOCK_SIZE*3)*sizeof(ATOM_DIM) + sizeof(/*unsigned long long*/ int)*num_buckets;	//this means each 'block' in the shared memory should be about 512 bytes right now, assuming 6400 points
+#if DEBUG == 1
 	printf("blockcount: %d\n",blockcount);
 	printf("numbuckets: %d\n", num_buckets);
 	printf("shmemsize2:  %d\n", shmemsize2);
 	printf("shmemsize3:  %d\n", shmemsize3);
 	printf("shmemsize4:  %d\n", shmemsize4);
-
+#endif
 
 	//depending on how this goes, what I may opt for is 'strategizing' my kernels.
 	//I will prioritize on getting the current kernel 4 on being as fast as possible (assuming it's correct at blocksize 32)
@@ -751,9 +753,7 @@ int main(int argc, char **argv)
 #endif
 
 	printf("************* Total Running Time of Kernel = %0.5f ms *************\n", elapsedTime);
-#if KERNELTYPE == 4
-// cudaFinish:
-#endif
+
 	cudaFree(d_gpu_histogram);
 	cudaFree(d_atom_x_list);
 	cudaFree(d_atom_y_list);
