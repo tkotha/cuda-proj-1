@@ -109,11 +109,11 @@ int main(int argc, char *argv[])
 
 
     //allocate histogram, prefix sum, and reordered buffer
-    int* histogram;
+    int* h_histogram;
     int* prefix_sum;
     int* reordered_result;
     //we'll see if this works directly... if not, switch back to the default memcpy method
-    cudaMallocHost((void**)&histogram, sizeof(int)*numPartitions);  //also use pinned memory
+    cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  //also use pinned memory
     
@@ -124,13 +124,13 @@ int main(int argc, char *argv[])
     int blockcount = (int)ceil( rSize/ (double) blocksize);
 
 
-    histogram<<<blockcount, blocksize>>>(r_h, rSize, histogram, numPartitions);
+    histogram<<<blockcount, blocksize>>>(r_h, rSize, h_histogram, numPartitions);
 
     //after this I assume the histogram is setup
 
     //wait a second these launch configs dont make sense... the histogram is ridiculously small
     //sp use numpartitions instead of blockcount... but what to do about blocksize...?
-    prefixScan<<<numPartitions, blocksize>>>(histogram, prefix_sum);
+    prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
 
     //after this I assume the prefix sum is setup
 
@@ -164,7 +164,7 @@ int main(int argc, char *argv[])
     int currentSum = 0;
     for(int i = 0; i < numPartitions; i++)
     {
-        int curval = histogram[i];
+        int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
         printf("    Pointer offset:    %d\n", currentSum);
         printf("    Number of Keys: %d\n", curval);
@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
 
     printf("************* Total Running Time of Kernel = %0.5f sec *************\n", elapsedTime/1000);
     cudaFreeHost(r_h);
-    cudaFreeHost(histogram);
+    cudaFreeHost(h_histogram);
     cudaFreeHost(prefix_sum);
     cudaFreeHost(reordered_result);
 
