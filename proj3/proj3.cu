@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     int blockcount = (int)ceil( rSize/ (double) blocksize);
 
 
-    histogram<<<blockcount, blocksize>>>(r_h, rSize, histogram, numPartitions);
+    // histogram<<<blockcount, blocksize>>>(r_h, rSize, histogram, numPartitions);
 
     //after this I assume the histogram is setup
 
