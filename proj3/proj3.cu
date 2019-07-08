@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
     //begin cuda kernel
     //for now, we use warp size 32
     int blocksize = 32;
-    int blockcount = (int)ceil( rSize/ (double) blocksize);
+    int blockcount = (int)ceil( (double)rSize/ (double) blocksize);
 
 
     histogram<<<blockcount, blocksize>>>(r_h, rSize, numPartitions, h_histogram);
