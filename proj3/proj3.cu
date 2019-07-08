@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
     int blockcount = (int)ceil( rSize/ (double) blocksize);
 
 
-    histogram<<<blockcount, blocksize>>>(r_h, histogram, numPartitions);
+    histogram<<<blockcount, blocksize>>>(r_h, rSize, histogram, numPartitions);
 
     //after this I assume the histogram is setup
 
@@ -127,7 +127,7 @@ int main(int argc, char *argv[])
 
     //after this I assume the prefix sum is setup
 
-    Reorder<<<blockcount, blocksize>>>(r_h, numPartitions, prefix_sum, reordered_result);
+    Reorder<<<blockcount, blocksize>>>(r_h, rSize, numPartitions, prefix_sum, reordered_result);
 
 
 
