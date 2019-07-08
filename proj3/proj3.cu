@@ -75,7 +75,7 @@ int isNumber(char * arg)
 
 
 //todo: add timing code
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {
     if(argc != 3 || !isNumber(argv[1])  || !isNumber(argv[2]))
     {
