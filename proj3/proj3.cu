@@ -1,4 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <sys/time.h>
+#include <cuda.h>
+
 #include <assert.h>
+
 
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
 #define ARRAY_DEBUG 1
