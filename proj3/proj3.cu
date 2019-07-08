@@ -157,6 +157,8 @@ int main(int argc, char *argv[])
         if(i+1 % 10 == 0)
             printf("\n");
     }
+    printf("\n");
+    printf("\n");
 #endif
     //also we dont really know how to deal with offsets?
     //is that just printing out the histogram sizes?
@@ -178,7 +180,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i < rSize; i++)
     {
         printf("%d, ", reordered_result[i]);
-        if(i % 10 == 0)
+        if(i+1 % 10 == 0)
             printf("\n");
     }
     printf("\n");
