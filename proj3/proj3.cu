@@ -48,6 +48,7 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     if(k < i_rh_size)
     {
         int h = bfe(i_r_h[k], 32, i_numPartitions);    //i assume start value is 0...?
+                                                       //nope... it's 32 i think
         atomicAdd(&o_histogram[h], 1);
     }
 }
@@ -66,7 +67,7 @@ __global__ void Reorder(int* i_r_h, int i_rh_size, int i_numPartitions, int* i_p
     if(k < i_rh_size)
     {
         int kval = i_r_h[k];
-        int h = bfe(kval, 0, i_numPartitions);
+        int h = bfe(kval, 32, i_numPartitions);
         int offset = atomicAdd(&i_prefix_sum[h], 1);
         o_r_h[offset] = kval;
     }
