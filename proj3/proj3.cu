@@ -181,6 +181,7 @@ int main(int argc, char *argv[])
         if(i % 10 == 0)
             printf("\n");
     }
+    printf("\n");
 #endif
 
     printf("************* Total Running Time of Kernel = %0.5f sec *************\n", elapsedTime/1000);
