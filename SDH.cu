@@ -89,13 +89,6 @@ struct timeval startTime, endTime;
 	distance of two points in the atom_list 
 */
 ATOM_DIM p2p_distance(int ind1, int ind2) {
-	
-	// double x1 = atom_list[ind1].x_pos;
-	// double x2 = atom_list[ind2].x_pos;
-	// double y1 = atom_list[ind1].y_pos;
-	// double y2 = atom_list[ind2].y_pos;
-	// double z1 = atom_list[ind1].z_pos;
-	// double z2 = atom_list[ind2].z_pos;
 	ATOM_DIM x1 = atom_x_list[ind1];
 	ATOM_DIM x2 = atom_x_list[ind2];
 	ATOM_DIM y1 = atom_y_list[ind1];

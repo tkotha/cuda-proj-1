@@ -9,6 +9,8 @@
 
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
 #define ARRAY_DEBUG 1
+#define PREFIX_DEBUG 0
+#define HIST_DEBUG 0
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
 {
@@ -45,7 +47,7 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     int k = blockDim.x * blockIdx.x + threadIdx.x;
     if(k < i_rh_size)
     {
-        int h = bfe(i_r_h[k], 0, i_numPartitions);    //i assume start value is 0...?
+        int h = bfe(i_r_h[k], 32, i_numPartitions);    //i assume start value is 0...?
         atomicAdd(&o_histogram[h], 1);
     }
 }
