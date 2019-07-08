@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
     for(int i = 0; i < rSize; i++)
     {
         printf("%d, ", r_h[i]);
-        if(i % 10 == 0)
+        if(i % 11 == 0)
             printf("\n");
     }
 #endif
