@@ -106,7 +106,7 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
         }
 
         //write output
-        o_prefix_sum[tid] = temp[tid];
+        o_prefix_sum[tid] = 99;//temp[tid];
         
     }
 
