@@ -79,7 +79,7 @@ __global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
 
     int thid = threadIdx.x;
     int n = blockDim.x;
-    int pout = 0; pin = 1;
+    int pout = 0, pin = 1;
 
     temp[pout*n + thid] = (thid > 0) ? (thid < n) ? i_histogram[thid-1] : 0 : 0;
     __syncthreads();
