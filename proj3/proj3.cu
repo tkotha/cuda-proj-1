@@ -103,7 +103,7 @@ __global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
 
     if(thid < n)
     {
-        o_prefix_sum = temp[pout*n+thid];
+        o_prefix_sum[thid] = temp[pout*n+thid];
     }
 }
 
