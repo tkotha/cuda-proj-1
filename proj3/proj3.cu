@@ -74,6 +74,7 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
 //remember that this is exclusive scan
 
 //does this work....? iunno.... but it seems to not crash on input size of 10... which is a start i guess
+//howver, upon inspection, it is probably dead wrong....
 __global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
 {
     //maybe i need multiple device kernels for this to work...
@@ -218,14 +219,15 @@ int main(int argc, char *argv[])
     //also we dont really know how to deal with offsets?
     //is that just printing out the histogram sizes?
     //does pointer offset in this case simply mean index of current partition into the reordered array?
-    // int currentSum = 0;
+    int currentSum = 0;
     for(int i = 0; i < numPartitions; i++)
     {
         int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
-        printf("    Pointer offset:    %d\n", prefix_sum[i]);
+        printf("    Pointer offset(CPU):    %d\n", currentSum);
+        printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
-        // currentSum += curval;
+        currentSum += curval;
     }
     printf("\n");
 
