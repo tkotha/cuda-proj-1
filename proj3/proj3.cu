@@ -80,32 +80,36 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
     //maybe i need multiple device kernels for this to work...
     extern __shared__ int temp[];
 
-    int thid = threadIdx.x;
-    int pout = 0, pin = 1;
-
-    // temp[pout*n + thid] = (thid > 0) ? (thid < n) ? i_histogram[thid-1] : 0 : 0;
-    temp[pout*n + thid] = (thid > 0) ? i_histogram[thid-1] : 0;
-    __syncthreads();
-
-    int offset;
-    for(offset = 1; offset < n; offset *= 2)
+    int tid = threadIdx.x;  //we only use 1 block, so threadidx is good enough
+    int offset = 1;
+    if(tid < n)
     {
-        pout = 1 - pout;
-        pin = 1 - pout;
-
-        if(thid >= offset)
-        {
-            temp[pout * n + thid] += temp[pin*n+thid - offset];
-        }
+        if(tid > 0)
+            temp[tid] = i_histogram[tid-1];
         else
-        {
-            temp[pout * n + thid] = temp[pin*n+thid];
-        }
+            temp[tid] = 0;
+    
+        
         __syncthreads();
+
+
+        for(offset = 1; offset < n; offset *= 2)
+        {
+            int lh = tid - offset;
+            int rh = tid;
+            if(lh > 0)
+                temp[rh] += temp[lh];
+            else
+                temp[rh] = temp[rh];
+
+            __syncthreads();
+        }
+
+        //write output
+        o_prefix_sum[tid] = temp[tid];
+        
     }
 
-    // if(thid < n)
-        o_prefix_sum[thid] = temp[pout*n+thid];
     
 }
 
