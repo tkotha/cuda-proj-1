@@ -9,7 +9,7 @@
 
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
 #define ARRAY_DEBUG 1
-#define PREFIX_DEBUG 0
+#define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
@@ -106,7 +106,7 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
         }
 
         //write output
-        o_prefix_sum[tid] = 99;//temp[tid];
+        o_prefix_sum[tid] = temp[tid];
         
     }
 
@@ -191,8 +191,14 @@ int main(int argc, char *argv[])
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
     prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
 
+#if PREFIX_DEBUG
+    printf("Resulting Prefix Sum array:\n");
+    for(int i = 0; i < numPartitions; i++)
+    {
+        printf("%d, ", prefix_sum[i]);
+    }
+#endif
     //after this I assume the prefix sum is setup
-
     Reorder<<<blockcount, blocksize>>>(r_h, rSize, numPartitions, prefix_sum, reordered_result);
 
 
@@ -228,7 +234,7 @@ int main(int argc, char *argv[])
         int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
         printf("    Pointer offset(CPU):    %d\n", currentSum);
-        printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
+        // printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
         currentSum += curval;
     }
