@@ -75,13 +75,12 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
 
 //does this work....? iunno.... but it seems to not crash on input size of 10... which is a start i guess
 //howver, upon inspection, it is probably dead wrong....
-__global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
+__global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
 {
     //maybe i need multiple device kernels for this to work...
     extern __shared__ int temp[];
 
     int thid = threadIdx.x;
-    int n = blockDim.x;
     int pout = 0, pin = 1;
 
     // temp[pout*n + thid] = (thid > 0) ? (thid < n) ? i_histogram[thid-1] : 0 : 0;
@@ -186,7 +185,7 @@ int main(int argc, char *argv[])
     //so perhaps then, this only has the grid size, and the block is the size of the grid
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
-    prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, prefix_sum);
+    prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
 
     //after this I assume the prefix sum is setup
 
