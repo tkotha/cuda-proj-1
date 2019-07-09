@@ -28,6 +28,17 @@ void dataGenerator(int* data, int count, int first, int step)
     }
 }
 
+//helper function provided by cuda 7.5 shuffle scan sample code
+static unsigned int iDivUp(unsigned int dividend, unsigned int divisor)
+{
+    return ((dividend % divisor) == 0) ?
+           (dividend / divisor) :
+           (dividend / divisor + 1);
+}
+
+
+
+
 /* This function embeds PTX code of CUDA to extract bit field from x. 
    "start" is the starting bit position relative to the LSB. 
    "nbits" is the bit field length.
@@ -53,11 +64,47 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     }
 }
 
+//notice how the num partitions will be the size of 2 to 1024... hmmm it seems they know arbitrary size prefix scan is tricky to get right
+//because coincidently, a naive prefix scan can maybe work up to 1024
+//this also might be a huge hint in itself as to how we go about this
+//the idea then, is that we only work from 1 block... the block with the size of 2^numberOfBits... i think.... are numPartitions = 2^numberOfBits?
 //define the prefix scan kernel here
 //implement it yourself or borrow the code from CUDA samples
+//so it seems the width is based on numPartitions
+//remember that this is exclusive scan
 __global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
 {
+    //maybe i need multiple device kernels for this to work...
+    extern __shared__ int temp[];
 
+    int thid = threadIdx.x;
+    int n = blockDim.x;
+    int pout = 0; pin = 1;
+
+    temp[pout*n + thid] = (thid > 0) ? (thid < n) ? i_histogram[thid-1] : 0 : 0;
+    __syncthreads();
+
+    int offset;
+    for(offset = 1; offset < n; offset *= 2)
+    {
+        pout = 1 - pout;
+        pin = 1 - pout;
+
+        if(thid >= offset)
+        {
+            temp[pout * n + thid] += temp[pin*n+thid - offset];
+        }
+        else
+        {
+            temp[pout * n + thid] = temp[pin*n+thid];
+        }
+        __syncthreads();
+    }
+
+    if(thid < n)
+    {
+        o_prefix_sum = temp[pout*n+thid];
+    }
 }
 
 //define the reorder kernel here
@@ -67,7 +114,7 @@ __global__ void Reorder(int* i_r_h, int i_rh_size, int i_numPartitions, int* i_p
     if(k < i_rh_size)
     {
         int kval = i_r_h[k];
-        int h = bfe(kval, 32, i_numPartitions);
+        int h = bfe(kval, 32, i_numPartitions);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
         int offset = atomicAdd(&i_prefix_sum[h], 1);
         o_r_h[offset] = kval;
     }
@@ -133,7 +180,10 @@ int main(int argc, char *argv[])
 
     //wait a second these launch configs dont make sense... the histogram is ridiculously small
     //sp use numpartitions instead of blockcount... but what to do about blocksize...?
-    prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
+    //so perhaps then, this only has the grid size, and the block is the size of the grid
+    //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
+    // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
+    prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, prefix_sum);
 
     //after this I assume the prefix sum is setup
 
