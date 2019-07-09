@@ -84,7 +84,8 @@ __global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
     int n = blockDim.x;
     int pout = 0, pin = 1;
 
-    temp[pout*n + thid] = (thid > 0) ? (thid < n) ? i_histogram[thid-1] : 0 : 0;
+    // temp[pout*n + thid] = (thid > 0) ? (thid < n) ? i_histogram[thid-1] : 0 : 0;
+    temp[pout*n + thid] = (thid > 0) ? i_histogram[thid-1] : 0;
     __syncthreads();
 
     int offset;
@@ -104,10 +105,9 @@ __global__ void prefixScan(int* i_histogram, int* o_prefix_sum)
         __syncthreads();
     }
 
-    if(thid < n)
-    {
+    // if(thid < n)
         o_prefix_sum[thid] = temp[pout*n+thid];
-    }
+    
 }
 
 //define the reorder kernel here
