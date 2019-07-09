@@ -197,6 +197,7 @@ int main(int argc, char *argv[])
     {
         printf("%d, ", prefix_sum[i]);
     }
+    printf("\n\n");
 #endif
     //after this I assume the prefix sum is setup
     Reorder<<<blockcount, blocksize>>>(r_h, rSize, numPartitions, prefix_sum, reordered_result);
