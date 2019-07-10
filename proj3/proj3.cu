@@ -11,7 +11,7 @@
 #define ARRAY_DEBUG 1
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
-#define START_BIT_LOC 32
+#define START_BIT_LOC 0
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
 {
@@ -53,7 +53,7 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     {
         int h = bfe(i_r_h[k], START_BIT_LOC, i_numPartitions);    //i assume start value is 0...?
                                                        //nope... it's 32 i think
-        atomicAdd(&o_histogram[h], 1);
+        atomicAdd(&o_histogram[0], 1);
     }
 }
 
