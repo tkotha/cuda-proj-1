@@ -8,7 +8,7 @@
 
 
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
-#define ARRAY_DEBUG 1
+#define ARRAY_DEBUG 0
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
 #define START_BIT_LOC 0
@@ -51,8 +51,8 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     int k = blockDim.x * blockIdx.x + threadIdx.x;
     if(k < i_rh_size)
     {
-        int h = bfe(i_r_h[k], START_BIT_LOC, i_numPartitions);    //i assume start value is 0...?
-                                                       //nope... it's 32 i think
+        int h = bfe(i_r_h[k], START_BIT_LOC, i_numPartitions);      //i assume start value is 0...?
+                                                                    //nope... it's 32 i think
         atomicAdd(&o_histogram[h], 1);
     }
 }
@@ -228,7 +228,7 @@ int main(int argc, char *argv[])
         int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
         printf("    Pointer offset(CPU):    %d\n", currentSum);
-        printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
+        // printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
         currentSum += curval;
     }
