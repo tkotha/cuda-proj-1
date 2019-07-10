@@ -53,7 +53,7 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     {
         int h = bfe(i_r_h[k], START_BIT_LOC, i_numPartitions);    //i assume start value is 0...?
                                                        //nope... it's 32 i think
-        atomicAdd(&o_histogram[0], 1);
+        atomicAdd(&o_histogram[h], 1);
     }
 }
 
