@@ -11,7 +11,7 @@
 #define ARRAY_DEBUG 1
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
-#define START_BIT_LOC 31
+#define START_BIT_LOC 32
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
 {
