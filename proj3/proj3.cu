@@ -11,7 +11,7 @@
 #define ARRAY_DEBUG 1
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
-#define START_BIT_LOC 32
+#define START_BIT_LOC 0
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
 {
@@ -27,14 +27,6 @@ void dataGenerator(int* data, int count, int first, int step)
         data[i] = data[j];
         data[j] = k_tmp;
     }
-}
-
-//helper function provided by cuda 7.5 shuffle scan sample code
-static unsigned int iDivUp(unsigned int dividend, unsigned int divisor)
-{
-    return ((dividend % divisor) == 0) ?
-           (dividend / divisor) :
-           (dividend / divisor + 1);
 }
 
 
