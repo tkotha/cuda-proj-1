@@ -11,6 +11,7 @@
 #define ARRAY_DEBUG 1
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
+#define START_BIT_LOC 0
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
 {
@@ -58,7 +59,7 @@ __global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o
     int k = blockDim.x * blockIdx.x + threadIdx.x;
     if(k < i_rh_size)
     {
-        int h = bfe(i_r_h[k], 32, i_numPartitions);    //i assume start value is 0...?
+        int h = bfe(i_r_h[k], START_BIT_LOC, i_numPartitions);    //i assume start value is 0...?
                                                        //nope... it's 32 i think
         atomicAdd(&o_histogram[h], 1);
     }
@@ -120,7 +121,7 @@ __global__ void Reorder(int* i_r_h, int i_rh_size, int i_numPartitions, int* i_p
     if(k < i_rh_size)
     {
         int kval = i_r_h[k];
-        int h = bfe(kval, 32, i_numPartitions);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
+        int h = bfe(kval, START_BIT_LOC, i_numPartitions);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
         int offset = atomicAdd(&i_prefix_sum[h], 1);
         o_r_h[offset] = kval;
     }
