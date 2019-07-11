@@ -46,12 +46,12 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 
 //define the histogram kernel here
 //kernel config based on r_h size
-__global__ void histogram(int* i_r_h, int i_rh_size, int i_numPartitions ,int* o_histogram)
+__global__ void histogram(int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
 {
     int k = blockDim.x * blockIdx.x + threadIdx.x;
     if(k < i_rh_size)
     {
-        int h = bfe(i_r_h[k], START_BIT_LOC, i_numPartitions);      //i assume start value is 0...?
+        int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);      //i assume start value is 0...?
                                                                     //nope... it's 32 i think
         atomicAdd(&o_histogram[h], 1);
     }
@@ -107,13 +107,13 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
 }
 
 //define the reorder kernel here
-__global__ void Reorder(int* i_r_h, int i_rh_size, int i_numPartitions, int* i_prefix_sum, int* o_r_h)
+__global__ void Reorder(int* i_r_h, int i_rh_size, int i_numbits, int* i_prefix_sum, int* o_r_h)
 {
     int k = blockDim.x * blockIdx.x + threadIdx.x;
     if(k < i_rh_size)
     {
         int kval = i_r_h[k];
-        int h = bfe(kval, START_BIT_LOC, i_numPartitions);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
+        int h = bfe(kval, START_BIT_LOC, i_numbits);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
         int offset = atomicAdd(&i_prefix_sum[h], 1);
         o_r_h[offset] = kval;
     }
@@ -171,9 +171,10 @@ int main(int argc, char *argv[])
     //for now, we use warp size 32
     int blocksize = 32;
     int blockcount = (int)ceil( (double)rSize/ (double) blocksize);
+    int numbits =(int)log2((double)numPartitions);
 
 
-    histogram<<<blockcount, blocksize>>>(r_h, rSize, numPartitions, h_histogram);
+    histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram);
 
     //after this I assume the histogram is setup
 
@@ -193,7 +194,7 @@ int main(int argc, char *argv[])
     printf("\n\n");
 #endif
     //after this I assume the prefix sum is setup
-    Reorder<<<blockcount, blocksize>>>(r_h, rSize, numPartitions, prefix_sum, reordered_result);
+    Reorder<<<blockcount, blocksize>>>(r_h, rSize, numbits, prefix_sum, reordered_result);
 
 
 
