@@ -219,11 +219,18 @@ int main(int argc, char *argv[])
     //for now, we use warp size 32
     int blocksize = 32;
     int POOL_SIZE = 32;
+    int blockcount;
+    //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
     if(rSize < MAX_THREAD_COUNT)
     {
         POOL_SIZE = -1;
+        blockcount = (int)ceil( (double)rSize/ (double) blocksize);
     }
-    int blockcount = (int)ceil( (double)rSize/ (double) blocksize / (double) POOL_SIZE);
+    else
+    {
+        blockcount = (int) ceil( (double)rSize/ (double) blocksize / (double) POOL_SIZE);
+    }
+    
     int numbits =(int)log2((double)numPartitions);
 
 
