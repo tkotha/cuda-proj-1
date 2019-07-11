@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     //begin cuda kernel
     //for now, we use warp size 32
     int blocksize = 32;
-    int POOL_SIZE = 64;
+    int POOL_SIZE = 128;
     int blockcount;
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
     if(rSize < MAX_THREAD_COUNT)
@@ -264,8 +264,8 @@ int main(int argc, char *argv[])
     //after this I assume the prefix sum is setup
     Reorder<<<blockcount, blocksize>>>(POOL_SIZE, r_h, rSize, numbits, prefix_sum, reordered_result);
 #if ERROR_CHECK
-    gpuErrchk( cudaPeekAtLastError() , "Reorder");
-    gpuErrchk( cudaDeviceSynchronize() , "Reorder");
+    gpuErrchk( cudaPeekAtLastError() , "Reorder1");
+    gpuErrchk( cudaDeviceSynchronize() , "Reorder2");
 #endif
 
 
