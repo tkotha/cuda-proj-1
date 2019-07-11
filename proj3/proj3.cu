@@ -174,9 +174,9 @@ int main(int argc, char *argv[])
     int* prefix_sum;
     int* reordered_result;
     //we'll see if this works directly... if not, switch back to the default memcpy method
-    gpuErrchk(cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  ,"malloc stage");//also use pinned memory
-    gpuErrchk(cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  ,"malloc stage");//also use pinned memory
-    gpuErrchk(cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  ,"malloc stage");//also use pinned memory
+    gpuErrchk(cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions)  ,"malloc stage");//also use pinned memory
+    gpuErrchk(cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions)  ,"malloc stage");//also use pinned memory
+    gpuErrchk(cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize)  ,"malloc stage");//also use pinned memory
     
 
     //begin cuda kernel
