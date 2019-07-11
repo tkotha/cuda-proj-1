@@ -195,6 +195,10 @@ int main(int argc, char *argv[])
     {
         printf("%d, ", prefix_sum[i]);
     }
+    for(int i = 0; i < numPartitions; i++)
+    {
+        printf("%d, ", prefix_sum_copy[i]);
+    }
     printf("\n\n");
 #endif
     //after this I assume the prefix sum is setup
