@@ -157,16 +157,16 @@ int main(int argc, char *argv[])
     
     int* r_h;
 
-    cudaMallocHost((void**)&r_h, sizeof(int)*rSize); //use pinned memory 
+    gpuErrchk(cudaMallocHost((void**)&r_h, sizeof(int)*rSize),"r_h malloc stage"); //use pinned memory 
     
     dataGenerator(r_h, rSize, 0, 1);
     
     /* your code */
     //i will start measuring time from my code specifically
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
-    cudaEventRecord(start, 0);
+    gpuErrchk(cudaEvent_t start, stop, "timing");
+    gpuErrchk(cudaEventCreate(&start), "timing");
+    gpuErrchk(cudaEventCreate(&stop), "timing");
+    gpuErrchk(cudaEventRecord(start, 0), "timing");
 
 
     //allocate histogram, prefix sum, and reordered buffer
@@ -174,9 +174,9 @@ int main(int argc, char *argv[])
     int* prefix_sum;
     int* reordered_result;
     //we'll see if this works directly... if not, switch back to the default memcpy method
-    cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  //also use pinned memory
-    cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  //also use pinned memory
-    cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  //also use pinned memory
+    gpuErrchk(cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  ,"malloc stage");//also use pinned memory
+    gpuErrchk(cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  ,"malloc stage");//also use pinned memory
+    gpuErrchk(cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  ,"malloc stage");//also use pinned memory
     
 
     //begin cuda kernel
@@ -221,13 +221,13 @@ int main(int argc, char *argv[])
 #endif
 
 
-    cudaEventRecord(stop, 0);
-    cudaEventSynchronize(stop);
+    gpuErrchk(cudaEventRecord(stop, 0), "timing-end");
+    gpuErrchk(cudaEventSynchronize(stop), "timing-end");
     float elapsedTime;
-    cudaEventElapsedTime( &elapsedTime, start, stop);
+    gpuErrchk(cudaEventElapsedTime( &elapsedTime, start, stop), "timing-end");
     printf("CUDA EVENT: Running time for GPU version: %0.5f ms\n", elapsedTime);
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+    gpuErrchk(cudaEventDestroy(start), "timing-end");
+    gpuErrchk(cudaEventDestroy(stop), "timing-end");
 
     //now we should attempt to print out the results...
     //uhh
@@ -272,10 +272,10 @@ int main(int argc, char *argv[])
 #endif
 
     printf("************* Total Running Time of Kernel = %0.5f sec *************\n", elapsedTime/1000);
-    cudaFreeHost(r_h);
-    cudaFreeHost(h_histogram);
-    cudaFreeHost(prefix_sum);
-    cudaFreeHost(reordered_result);
+    gpuErrchk(cudaFreeHost(r_h), "freeing");
+    gpuErrchk(cudaFreeHost(h_histogram), "freeing");
+    gpuErrchk(cudaFreeHost(prefix_sum), "freeing");
+    gpuErrchk(cudaFreeHost(reordered_result), "freeing");
 
     return 0;
 }
