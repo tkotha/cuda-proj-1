@@ -160,7 +160,6 @@ int main(int argc, char *argv[])
     //allocate histogram, prefix sum, and reordered buffer
     int* h_histogram;
     int* prefix_sum;
-    int* prefix_sum_copy;
     int* reordered_result;
     //we'll see if this works directly... if not, switch back to the default memcpy method
     cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  //also use pinned memory
