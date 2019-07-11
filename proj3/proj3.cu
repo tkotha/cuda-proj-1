@@ -61,12 +61,12 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 //kernel config based on r_h size
 __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
 {
-    int k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
+    int k;
     if(POOL_SIZE < i_rh_size && POOL_SIZE > 0)
     {
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
         int kindex;
-        for(kindex = k; k < k+POOL_SIZE; kindex++)
+        for(kindex = k; kindex < k+POOL_SIZE; kindex++)
         {
             if(kindex < i_rh_size)
             {
