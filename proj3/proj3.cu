@@ -13,12 +13,12 @@
 #define HIST_DEBUG 0
 #define START_BIT_LOC 0
 #define ERROR_CHECK 1
-#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+#define gpuErrchk(ans, KERN_NAME) { gpuAssert((ans), KERN_NAME, __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, char * kernelName, const char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess) 
    {
-      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      fprintf(stderr,"GPUassert(%s): %s %s %d\n", kernelName, cudaGetErrorString(code), file, line);
       if (abort) exit(code);
    }
 }
@@ -189,8 +189,8 @@ int main(int argc, char *argv[])
     histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram);
 
 #if ERROR_CHECK
-    gpuErrchk( cudaPeekAtLastError() );
-    gpuErrchk( cudaDeviceSynchronize() );
+    gpuErrchk( cudaPeekAtLastError() , "histogram");
+    gpuErrchk( cudaDeviceSynchronize(), "histogram" );
 #endif
     //after this I assume the histogram is setup
 
@@ -201,8 +201,8 @@ int main(int argc, char *argv[])
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
     prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
 #if ERROR_CHECK
-    gpuErrchk( cudaPeekAtLastError() );
-    gpuErrchk( cudaDeviceSynchronize() );
+    gpuErrchk( cudaPeekAtLastError() , "prefixScan");
+    gpuErrchk( cudaDeviceSynchronize(), "prefixScan" );
 #endif
 #if PREFIX_DEBUG
     printf("Resulting Prefix Sum array:\n");
@@ -216,8 +216,8 @@ int main(int argc, char *argv[])
     //after this I assume the prefix sum is setup
     Reorder<<<blockcount, blocksize>>>(r_h, rSize, numbits, prefix_sum, reordered_result);
 #if ERROR_CHECK
-    gpuErrchk( cudaPeekAtLastError() );
-    gpuErrchk( cudaDeviceSynchronize() );
+    gpuErrchk( cudaPeekAtLastError() , "Reorder");
+    gpuErrchk( cudaDeviceSynchronize() , "Reorder");
 #endif
 
 
