@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
     cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  //also use pinned memory
-    prefix_sum_copy = (int*)malloc(sizeof(int)*numPartitions);
+    cudaMallocHost((void**)&prefix_sum_copy, sizeof(int)*numPartitions);  //also use pinned memory
 
     //begin cuda kernel
     //for now, we use warp size 32
