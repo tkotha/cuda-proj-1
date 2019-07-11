@@ -12,6 +12,17 @@
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
 #define START_BIT_LOC 0
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+
 //data generator
 void dataGenerator(int* data, int count, int first, int step)
 {
@@ -174,7 +185,7 @@ int main(int argc, char *argv[])
     int numbits =(int)log2((double)numPartitions);
 
 
-    histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram);
+   gpuErrchk(histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram));
 
     //after this I assume the histogram is setup
 
@@ -183,7 +194,7 @@ int main(int argc, char *argv[])
     //so perhaps then, this only has the grid size, and the block is the size of the grid
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
-    prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
+    gpuErrchk(prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum));
     
 #if PREFIX_DEBUG
     printf("Resulting Prefix Sum array:\n");
@@ -195,7 +206,7 @@ int main(int argc, char *argv[])
     printf("\n\n");
 #endif
     //after this I assume the prefix sum is setup
-    Reorder<<<blockcount, blocksize>>>(r_h, rSize, numbits, prefix_sum, reordered_result);
+    gpuErrchk(Reorder<<<blockcount, blocksize>>>(r_h, rSize, numbits, prefix_sum, reordered_result));
 
 
 
