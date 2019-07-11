@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
         int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
         printf("    Pointer offset(CPU):    %d\n", currentSum);
-        // printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
+        printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
         currentSum += curval;
     }
