@@ -139,7 +139,7 @@ __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits,
 {
 
     int k;
-    if(POOL_SIZE < i_rh_size && POOL_SIZE > 0)
+    if(POOL_SIZE > 0)
     {
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;    
         int kindex;
