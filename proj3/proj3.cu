@@ -160,12 +160,13 @@ int main(int argc, char *argv[])
     //allocate histogram, prefix sum, and reordered buffer
     int* h_histogram;
     int* prefix_sum;
+    int* prefix_sum_copy;
     int* reordered_result;
     //we'll see if this works directly... if not, switch back to the default memcpy method
     cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  //also use pinned memory
-    
+    prefix_sum_copy = (int*)malloc(sizeof(int)*numPartitions);
 
     //begin cuda kernel
     //for now, we use warp size 32
@@ -184,7 +185,10 @@ int main(int argc, char *argv[])
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
     prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
-
+    for(int i = 0; i < numPartitions; i++)
+    {
+        prefix_sum_copy[i] = prefix_sum[i];
+    }
 #if PREFIX_DEBUG
     printf("Resulting Prefix Sum array:\n");
     for(int i = 0; i < numPartitions; i++)
@@ -228,8 +232,9 @@ int main(int argc, char *argv[])
     {
         int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
-        printf("    Pointer offset(CPU):    %d\n", currentSum);
-        printf("    Pointer offset(GPU):    %d\n", prefix_sum[i]);
+        printf("    Pointer offset(CPU)   :    %d\n", currentSum);
+        printf("    Pointer offset(before):    %d\n", prefix_sum_copy[i]);
+        printf("    Pointer offset(after) :    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
         currentSum += curval;
     }
