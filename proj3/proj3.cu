@@ -166,7 +166,7 @@ int main(int argc, char *argv[])
     cudaMallocHost((void**)&h_histogram, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&prefix_sum, sizeof(int)*numPartitions);  //also use pinned memory
     cudaMallocHost((void**)&reordered_result, sizeof(int)*rSize);  //also use pinned memory
-    cudaMallocHost((void**)&prefix_sum_copy, sizeof(int)*numPartitions);  //also use pinned memory
+    
 
     //begin cuda kernel
     //for now, we use warp size 32
@@ -185,18 +185,14 @@ int main(int argc, char *argv[])
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
     prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
-    cudaMemcpy(&prefix_sum_copy, &prefix_sum, sizeof(int)*numPartitions, cudaMemcpyHostToHost);
+    
 #if PREFIX_DEBUG
     printf("Resulting Prefix Sum array:\n");
     for(int i = 0; i < numPartitions; i++)
     {
         printf("%d, ", prefix_sum[i]);
     }
-    printf("\n");
-    for(int i = 0; i < numPartitions; i++)
-    {
-        printf("%d, ", prefix_sum_copy[i]);
-    }
+    
     printf("\n\n");
 #endif
     //after this I assume the prefix sum is setup
@@ -235,7 +231,7 @@ int main(int argc, char *argv[])
         int curval = h_histogram[i];
         printf("Partition %d:\n", i+1);
         printf("    Pointer offset(CPU)   :    %d\n", currentSum);
-        printf("    Pointer offset(before):    %d\n", prefix_sum_copy[i]);
+        printf("    Pointer offset(before) :    %d\n", prefix_sum[i] - curval);
         printf("    Pointer offset(after) :    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
         currentSum += curval;
