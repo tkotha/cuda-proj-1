@@ -163,7 +163,7 @@ int main(int argc, char *argv[])
     
     /* your code */
     //i will start measuring time from my code specifically
-    gpuErrchk(cudaEvent_t start, stop, "timing");
+    cudaEvent_t start, stop;
     gpuErrchk(cudaEventCreate(&start), "timing");
     gpuErrchk(cudaEventCreate(&stop), "timing");
     gpuErrchk(cudaEventRecord(start, 0), "timing");
