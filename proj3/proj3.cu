@@ -67,13 +67,12 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
         int kindex;
         int kmax = k+POOL_SIZE-1;
-        for(kindex = k; kindex < kmax; kindex++)
+        for(kindex = k; kindex < kmax && kindex < i_rh_size; kindex++)
         {
-            if(kindex < i_rh_size)
-            {
-                int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
-                atomicAdd(&o_histogram[h], 1);
-            }
+            
+            int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
+            atomicAdd(&o_histogram[h], 1);
+            
         }
     }
     else
