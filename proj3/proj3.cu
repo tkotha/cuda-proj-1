@@ -185,7 +185,7 @@ int main(int argc, char *argv[])
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
     prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
-    // cudaMemcpy(&prefix_sum_copy, &prefix_sum, sizeof(int)*numPartitions, cudaMemcpyHostToHost);
+    cudaMemcpy(&prefix_sum, &prefix_sum_copy, sizeof(int)*numPartitions, cudaMemcpyHostToHost);
 #if PREFIX_DEBUG
     printf("Resulting Prefix Sum array:\n");
     for(int i = 0; i < numPartitions; i++)
