@@ -69,10 +69,9 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
         int kmax = k+POOL_SIZE-1;
         for(kindex = k; kindex <= kmax && kindex < i_rh_size; kindex++)
         {
-            
             int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
             atomicAdd(&o_histogram[h], 1);
-            
+            __syncthreads();
         }
     }
     else
@@ -130,8 +129,6 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
         o_prefix_sum[tid] = temp[tid];
         
     }
-
-    
 }
 
 //define the reorder kernel here
