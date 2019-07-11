@@ -189,8 +189,8 @@ int main(int argc, char *argv[])
     histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram);
 
 #if ERROR_CHECK
-    gpuErrchk( cudaPeekAtLastError() , "histogram");
-    gpuErrchk( cudaDeviceSynchronize(), "histogram" );
+    gpuErrchk( cudaPeekAtLastError() , "histogram1");
+    gpuErrchk( cudaDeviceSynchronize(), "histogram2" );
 #endif
     //after this I assume the histogram is setup
 
