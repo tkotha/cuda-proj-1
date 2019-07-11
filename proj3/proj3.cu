@@ -62,12 +62,12 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
 {
     int k;
-    if(POOL_SIZE < i_rh_size && POOL_SIZE > 0)
+    if(POOL_SIZE > 0)
     {
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
         int kindex;
         int kmax = k+POOL_SIZE-1;
-        for(kindex = k; kindex < kmax && kindex < i_rh_size; kindex++)
+        for(kindex = k; kindex <= kmax && kindex < i_rh_size; kindex++)
         {
             
             int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
