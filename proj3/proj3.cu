@@ -66,7 +66,8 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     {
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
         int kindex;
-        for(kindex = k; kindex < k+POOL_SIZE-1; kindex++)
+        int kmax = k+POOL_SIZE-1;
+        for(kindex = k; kindex < kmax; kindex++)
         {
             if(kindex < i_rh_size)
             {
