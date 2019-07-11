@@ -8,7 +8,7 @@
 
 
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
-#define ARRAY_DEBUG 1
+#define ARRAY_DEBUG 0
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
 #define START_BIT_LOC 0
