@@ -12,6 +12,7 @@
 #define PREFIX_DEBUG 1
 #define HIST_DEBUG 0
 #define START_BIT_LOC 0
+#define ERROR_CHECK 1
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
 {
@@ -185,8 +186,12 @@ int main(int argc, char *argv[])
     int numbits =(int)log2((double)numPartitions);
 
 
-   gpuErrchk(histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram));
+    histogram<<<blockcount, blocksize>>>(r_h, rSize, numbits, h_histogram);
 
+#if ERROR_CHECK
+    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaDeviceSynchronize() );
+#endif
     //after this I assume the histogram is setup
 
     //wait a second these launch configs dont make sense... the histogram is ridiculously small
@@ -194,8 +199,11 @@ int main(int argc, char *argv[])
     //so perhaps then, this only has the grid size, and the block is the size of the grid
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
-    gpuErrchk(prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum));
-    
+    prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
+#if ERROR_CHECK
+    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaDeviceSynchronize() );
+#endif
 #if PREFIX_DEBUG
     printf("Resulting Prefix Sum array:\n");
     for(int i = 0; i < numPartitions; i++)
@@ -206,8 +214,11 @@ int main(int argc, char *argv[])
     printf("\n\n");
 #endif
     //after this I assume the prefix sum is setup
-    gpuErrchk(Reorder<<<blockcount, blocksize>>>(r_h, rSize, numbits, prefix_sum, reordered_result));
-
+    Reorder<<<blockcount, blocksize>>>(r_h, rSize, numbits, prefix_sum, reordered_result);
+#if ERROR_CHECK
+    gpuErrchk( cudaPeekAtLastError() );
+    gpuErrchk( cudaDeviceSynchronize() );
+#endif
 
 
     cudaEventRecord(stop, 0);
