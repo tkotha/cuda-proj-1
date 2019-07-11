@@ -194,9 +194,9 @@ int main(int argc, char *argv[])
     int* r_h;
 
     gpuErrchk(cudaMallocHost((void**)&r_h, sizeof(int)*rSize),"r_h malloc stage"); //use pinned memory 
-    // printf("Generating data...\n");
+    printf("Generating data...\n");
     dataGenerator(r_h, rSize, 0, 1);
-    // printf("Finished generating data!\n");
+    printf("Finished generating data!\n");
     /* your code */
     //i will start measuring time from my code specifically
     cudaEvent_t start, stop;
