@@ -14,7 +14,7 @@
 #define START_BIT_LOC 0
 #define ERROR_CHECK 1
 #define MAX_THREAD_COUNT 2097121
-#define FORCE_POOLING 1
+#define FORCE_POOLING 0
 #define gpuErrchk(ans, KERN_NAME) { gpuAssert((ans), KERN_NAME, __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, char * kernelName, const char *file, int line, bool abort=true)
 {
