@@ -68,11 +68,15 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
         int kindex;
         int kmax = k+POOL_SIZE;
-        for(kindex = k; kindex < kmax && kindex < i_rh_size; kindex++)
+        for(kindex = k; kindex < kmax; kindex++)
         {
-            // __syncthreads();
-            int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
-            atomicAdd(&o_histogram[h], 1);
+            if(kindex < i_rh_size)
+            {
+
+                int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
+                atomicAdd(&o_histogram[h], 1);
+            }
+            
         }
     }
     else
@@ -141,14 +145,15 @@ __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits,
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;    
         int kindex;
         int kmax = k+POOL_SIZE;
-        for(kindex = k; kindex < kmax && kindex < i_rh_size ; kindex++)
+        for(kindex = k; kindex < kmax; kindex++)
         {
-            
-            int kval = i_r_h[kindex];
-            int h = bfe(kval, START_BIT_LOC, i_numbits);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
-            int offset = atomicAdd(&i_prefix_sum[h], 1);
-            o_r_h[offset] = kval;
-            
+            if(kindex < i_rh_size )
+            {
+                int kval = i_r_h[kindex];
+                int h = bfe(kval, START_BIT_LOC, i_numbits);     //i assume start value is 32 here as well, if we're using the same logic from histogram kernel
+                int offset = atomicAdd(&i_prefix_sum[h], 1);
+                o_r_h[offset] = kval;    
+            }
         }
     }
     else
