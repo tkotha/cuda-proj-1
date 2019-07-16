@@ -65,7 +65,7 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     int k;
     if(POOL_SIZE > 0)
     {
-        k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
+        k = (blockDim.x * blockIdx.x + threadIdx.x) * POOL_SIZE;
         int kindex;
         int kmax = k+POOL_SIZE;
         for(kindex = k; kindex < kmax; kindex++)
@@ -142,7 +142,7 @@ __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits,
     int k;
     if(POOL_SIZE > 0)
     {
-        k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;    
+        k = (blockDim.x * blockIdx.x + threadIdx.x) * POOL_SIZE;    
         int kindex;
         int kmax = k+POOL_SIZE;
         for(kindex = k; kindex < kmax; kindex++)
