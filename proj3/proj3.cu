@@ -14,6 +14,7 @@
 #define START_BIT_LOC 0
 #define ERROR_CHECK 1
 #define MAX_THREAD_COUNT 2097121
+#define FORCE_POOLING 1
 #define gpuErrchk(ans, KERN_NAME) { gpuAssert((ans), KERN_NAME, __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, char * kernelName, const char *file, int line, bool abort=true)
 {
@@ -69,7 +70,7 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
         int kmax = k+POOL_SIZE-1;
         for(kindex = k; kindex <= kmax && kindex < i_rh_size; kindex++)
         {
-            __syncthreads();
+            // __syncthreads();
             int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
             atomicAdd(&o_histogram[h], 1);
         }
@@ -97,7 +98,6 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
 
 __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
 {
-    //maybe i need multiple device kernels for this to work...
     extern __shared__ int temp[];
 
     int tid = threadIdx.x;  //we only use 1 block, so threadidx is good enough
@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     int POOL_SIZE = 32;
     int blockcount;
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
-    if(rSize < MAX_THREAD_COUNT)
+    if(!FORCE_POOLING || rSize < MAX_THREAD_COUNT)
     {
         POOL_SIZE = -1;
         blockcount = (int)ceil( (double)rSize/ (double) blocksize);
