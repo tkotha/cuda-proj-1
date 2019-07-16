@@ -21,7 +21,7 @@ inline void gpuAssert(cudaError_t code, char * kernelName, const char *file, int
    if (code != cudaSuccess) 
    {
       fprintf(stderr,"GPUassert(%s): %s %s %d\n", kernelName, cudaGetErrorString(code), file, line);
-      if (aboutort) exit(code);
+      if (abort) exit(code);
    }
 }
 
