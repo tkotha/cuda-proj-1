@@ -45,6 +45,14 @@ void dataGenerator(int* data, int count, int first, int step)
 
 
 
+//list of obvious optimizations to make:
+/*
+    convert the histogram pooling and reorder pooling code to use thread strides, so as to enable coalesced mem accesses
+    switch the prefix sum to a non-naive algorithm
+    if possible, upgrade prefix sum to use shuffle warp instructions
+    for the histogram, because the expected size is at most 1024 bins, we should be able to get away with a shared mem histogram
+*/
+
 
 /* This function embeds PTX code of CUDA to extract bit field from x. 
    "start" is the starting bit position relative to the LSB. 
@@ -274,8 +282,8 @@ int main(int argc, char *argv[])
 #endif
 
 
-    gpuErrchk(cudaEventRecord(stop, 0), "timing-end");
     gpuErrchk(cudaEventSynchronize(stop), "timing-end");
+    gpuErrchk(cudaEventRecord(stop, 0), "timing-end");
     float elapsedTime;
     gpuErrchk(cudaEventElapsedTime( &elapsedTime, start, stop), "timing-end");
     printf("CUDA EVENT: Running time for GPU version: %0.5f ms\n", elapsedTime);
