@@ -220,11 +220,13 @@ int main(int argc, char *argv[])
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
     if(!FORCE_POOLING || rSize < MAX_THREAD_COUNT)
     {
+        printf("disable pooling!\n");
         POOL_SIZE = -1;
         blockcount = (int)ceil( (double)rSize/ (double) blocksize);
     }
     else
     {
+        printf("enable pooling for array size: %d!\n", rSize);
         blockcount = (int) ceil( (double)rSize/ (double) blocksize / (double) POOL_SIZE);
     }
     
