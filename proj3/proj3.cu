@@ -14,14 +14,14 @@
 #define START_BIT_LOC 0
 #define ERROR_CHECK 1
 #define MAX_THREAD_COUNT 2097121
-#define FORCE_POOLING 0
+#define FORCE_POOLING 1
 #define gpuErrchk(ans, KERN_NAME) { gpuAssert((ans), KERN_NAME, __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, char * kernelName, const char *file, int line, bool abort=true)
 {
    if (code != cudaSuccess) 
    {
       fprintf(stderr,"GPUassert(%s): %s %s %d\n", kernelName, cudaGetErrorString(code), file, line);
-      if (abort) exit(code);
+      if (aboutort) exit(code);
    }
 }
 
@@ -67,8 +67,8 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     {
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;
         int kindex;
-        int kmax = k+POOL_SIZE-1;
-        for(kindex = k; kindex <= kmax && kindex < i_rh_size; kindex++)
+        int kmax = k+POOL_SIZE;
+        for(kindex = k; kindex < kmax && kindex < i_rh_size; kindex++)
         {
             // __syncthreads();
             int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
@@ -140,8 +140,8 @@ __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits,
     {
         k = blockDim.x * blockIdx.x + threadIdx.x * POOL_SIZE;    
         int kindex;
-        int kmax = k+POOL_SIZE-1;
-        for(kindex = k; kindex <= kmax && kindex < i_rh_size ; kindex++)
+        int kmax = k+POOL_SIZE;
+        for(kindex = k; kindex < kmax && kindex < i_rh_size ; kindex++)
         {
             
             int kval = i_r_h[kindex];
