@@ -220,7 +220,7 @@ int main(int argc, char *argv[])
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
     if(!FORCE_POOLING && rSize < MAX_THREAD_COUNT)
     {
-        printf("disable pooling!\n");
+        printf("disable pooling for array size: %d!\n", rSize);
         POOL_SIZE = -1;
         blockcount = (int)ceil( (double)rSize/ (double) blocksize);
     }
@@ -229,8 +229,9 @@ int main(int argc, char *argv[])
         printf("enable pooling for array size: %d!\n", rSize);
         blockcount = (int) ceil( (double)rSize/ (double) blocksize / (double) POOL_SIZE);
     }
-    
+    printf("block count: %d\n", blockcount);
     int numbits =(int)log2((double)numPartitions);
+    printf("num bits: %d\n", numbits);
 
 
     histogram<<<blockcount, blocksize>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram);
