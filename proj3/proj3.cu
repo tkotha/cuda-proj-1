@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     int POOL_SIZE = 32;
     int blockcount;
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
-    if(!FORCE_POOLING || rSize < MAX_THREAD_COUNT)
+    if(!FORCE_POOLING && rSize < MAX_THREAD_COUNT)
     {
         printf("disable pooling!\n");
         POOL_SIZE = -1;
