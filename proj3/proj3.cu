@@ -282,8 +282,8 @@ int main(int argc, char *argv[])
 #endif
 
 
-    gpuErrchk(cudaEventSynchronize(stop), "timing-end");
     gpuErrchk(cudaEventRecord(stop, 0), "timing-end");
+    gpuErrchk(cudaEventSynchronize(stop), "timing-end");
     float elapsedTime;
     gpuErrchk(cudaEventElapsedTime( &elapsedTime, start, stop), "timing-end");
     printf("CUDA EVENT: Running time for GPU version: %0.5f ms\n", elapsedTime);
