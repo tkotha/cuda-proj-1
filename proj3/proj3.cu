@@ -260,7 +260,7 @@ int main(int argc, char *argv[])
     //so perhaps then, this only has the grid size, and the block is the size of the grid
     //look at notes above the kernel to get a sense as to why I'm setting up the kernel this way
     // prefixScan<<<numPartitions, blocksize>>>(h_histogram, prefix_sum);
-    prefixScan<<< 1, numPartitions, numPartitions>>>(h_histogram, numPartitions, prefix_sum);
+    prefixScan<<< 1, numPartitions, sizeof(int)*numPartitions>>>(h_histogram, numPartitions, prefix_sum);
 #if ERROR_CHECK
     gpuErrchk( cudaPeekAtLastError() , "prefixScan");
     gpuErrchk( cudaDeviceSynchronize(), "prefixScan" );
