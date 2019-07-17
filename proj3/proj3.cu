@@ -9,8 +9,8 @@
 
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
 #define ARRAY_DEBUG 0
-#define PREFIX_DEBUG 1
-#define HIST_DEBUG 0
+#define PREFIX_DEBUG 0
+#define HIST_DEBUG 1
 #define START_BIT_LOC 0
 #define ERROR_CHECK 1
 #define MAX_THREAD_COUNT 2097121
@@ -254,6 +254,15 @@ int main(int argc, char *argv[])
 #if ERROR_CHECK
     gpuErrchk( cudaPeekAtLastError() , "histogram1");
     gpuErrchk( cudaDeviceSynchronize(), "histogram2" );
+#endif
+#if HIST_DEBUG
+    printf("Resulting hist array:\n");
+    for(int i = 0; i < numPartitions; i++)
+    {
+        printf("%d, ", h_histogram[i]);
+    }
+    
+    printf("\n\n");
 #endif
     //after this I assume the histogram is setup
 
