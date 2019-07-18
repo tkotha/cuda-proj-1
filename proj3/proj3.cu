@@ -327,7 +327,8 @@ int main(int argc, char *argv[])
     }
     printf("block count: %d\n", blockcount);
     int numbits =(int)log2((double)numPartitions);
-    printf("num bits: %d\n", numbits);
+    printf("num partitions: %d\n", numPartitions);
+    printf("num bits:       %d\n", numbits);
 
 
     histogram<<<blockcount, blocksize>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram);
