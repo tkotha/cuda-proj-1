@@ -44,7 +44,7 @@ void dataGenerator(int* data, int count, int first, int step)
         data[j] = k_tmp;
     }
 }
-
+/*
 __global__ void shfl_scan_test(int *data, int width, int *partial_sums=NULL)
 {
     extern __shared__ int sums[];
@@ -124,7 +124,7 @@ __global__ void shfl_scan_test(int *data, int width, int *partial_sums=NULL)
         partial_sums[blockIdx.x] = value;
     }
 }
-
+*/
 
 //list of obvious optimizations to make:
 /*
