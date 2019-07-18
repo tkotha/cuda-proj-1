@@ -213,7 +213,8 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
             int lh = tid - offset;
             int rh = tid;
             if(lh > 0)
-                temp[rh] += temp[lh];
+                //temp[rh] += temp[lh];
+                atomicAdd(&temp[rh], temp[lh]); //this seems really stupid, but whatevs
             else
                 temp[rh] = temp[rh];
 
