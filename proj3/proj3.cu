@@ -216,7 +216,8 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
                 //temp[rh] += temp[lh];
                 atomicAdd(&temp[rh], temp[lh]); //this seems really stupid, but whatevs
             else
-                temp[rh] = temp[rh];
+                // temp[rh] = temp[rh];
+                atomicAdd(&temp[rh], 0);        //ok now this is getting ridiculous
 
             __syncthreads();
         }
