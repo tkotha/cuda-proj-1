@@ -150,56 +150,56 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 //define the histogram kernel here
 //kernel config based on r_h size
  // old version
-__global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
-{
-    int k;
-    if(POOL_SIZE > 0)
-    {
-        k = (blockDim.x * blockIdx.x + threadIdx.x) * POOL_SIZE;
-        int kindex;
-        int kmax = k+POOL_SIZE;
-        for(kindex = k; kindex < kmax; kindex++)
-        {
-            if(kindex < i_rh_size)
-            {
-
-                int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
-                atomicAdd(&o_histogram[h], 1);
-            }
-            
-        }
-    }
-    else
-    {
-        k = blockDim.x * blockIdx.x + threadIdx.x;
-        if(k < i_rh_size)
-        {
-            int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);      //i assume start value is 0...?
-                                                                        //nope... it's 32 i think
-            atomicAdd(&o_histogram[h], 1);
-        }    
-    }
-}
-
-// __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram, int histSize)
+// __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
 // {
-//     //first attempt at coalesced accesses
-//     extern __shared__ int sh_hist[];
-//     int kstart = blockDim.x * blockIdx.x + threadIdx.x;
-//     for(int k = threadIdx.x; k < histSize; k += blockDim.x)
+//     int k;
+//     if(POOL_SIZE > 0)
 //     {
-//         sh_hist[k] = 0;
+//         k = (blockDim.x * blockIdx.x + threadIdx.x) * POOL_SIZE;
+//         int kindex;
+//         int kmax = k+POOL_SIZE;
+//         for(kindex = k; kindex < kmax; kindex++)
+//         {
+//             if(kindex < i_rh_size)
+//             {
+
+//                 int h = bfe(i_r_h[kindex], START_BIT_LOC, i_numbits);    
+//                 atomicAdd(&o_histogram[h], 1);
+//             }
+            
+//         }
 //     }
-//     for(int k = kstart; k < i_rh_size; k += gridDim.x * blockDim.x)
+//     else
 //     {
-//         int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
-//         atomicAdd(&sh_hist[h], 1);
-//     }
-//     for(int k = threadIdx.x; k < histSize; k += blockDim.x)
-//     {
-//         atomicAdd(&o_histogram[k], sh_hist[k]);
+//         k = blockDim.x * blockIdx.x + threadIdx.x;
+//         if(k < i_rh_size)
+//         {
+//             int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);      //i assume start value is 0...?
+//                                                                         //nope... it's 32 i think
+//             atomicAdd(&o_histogram[h], 1);
+//         }    
 //     }
 // }
+
+__global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram, int histSize)
+{
+    //first attempt at coalesced accesses
+    extern __shared__ int sh_hist[];
+    int kstart = blockDim.x * blockIdx.x + threadIdx.x;
+    for(int k = threadIdx.x; k < histSize; k += blockDim.x)
+    {
+        sh_hist[k] = 0;
+    }
+    for(int k = kstart; k < i_rh_size; k += gridDim.x * blockDim.x)
+    {
+        int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
+        atomicAdd(&sh_hist[h], 1);
+    }
+    for(int k = threadIdx.x; k < histSize; k += blockDim.x)
+    {
+        atomicAdd(&o_histogram[k], sh_hist[k]);
+    }
+}
 
 //notice how the num partitions will be the size of 2 to 1024... hmmm it seems they know arbitrary size prefix scan is tricky to get right
 //because coincidently, a naive prefix scan can maybe work up to 1024
@@ -366,8 +366,8 @@ int main(int argc, char *argv[])
     printf("num bits:       %d\n", numbits);
 
 
-    histogram<<<blockcount, blocksize>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram);
-    // histogram<<<blockcount, blocksize, sizeof(int)*numPartitions>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram, numPartitions);
+    // histogram<<<blockcount, blocksize>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram);
+    histogram<<<blockcount, blocksize, sizeof(int)*numPartitions>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram, numPartitions);
 
 #if ERROR_CHECK
     gpuErrchk( cudaPeekAtLastError() , "histogram1");
