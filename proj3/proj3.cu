@@ -195,9 +195,9 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
         int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
         atomicAdd(&sh_hist[h], 1);
     }
-    for(int k = 0; k < histSize; k += blockDim.x)
+    for(int k = threadIdx.x; k < histSize; k += blockDim.x)
     {
-        // atomicAdd(&o_histogram[k], sh_hist[k]);
+        atomicAdd(&o_histogram[k], sh_hist[k]);
     }
 }
 
