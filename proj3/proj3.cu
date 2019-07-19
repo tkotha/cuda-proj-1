@@ -263,7 +263,7 @@ int main(int argc, char *argv[])
 
     //begin cuda kernel
     //for now, we use warp size 32
-    int blocksize = 128;
+    int blocksize = 256;
     int POOL_SIZE = 512;
     int blockcount;
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
