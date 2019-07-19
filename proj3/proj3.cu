@@ -44,94 +44,14 @@ void dataGenerator(int* data, int count, int first, int step)
         data[j] = k_tmp;
     }
 }
-/*
-__global__ void shfl_scan_test(int *data, int width, int *partial_sums=NULL)
-{
-    extern __shared__ int sums[];
-    int id = ((blockIdx.x * blockDim.x) + threadIdx.x);
-    int lane_id = id % warpSize;
-    // determine a warp_id within a block
-    int warp_id = threadIdx.x / warpSize;
 
-    // Below is the basic structure of using a shfl instruction
-    // for a scan.
-    // Record "value" as a variable - we accumulate it along the way
-    int value = data[id];
-
-    // Now accumulate in log steps up the chain
-    // compute sums, with another thread's value who is
-    // distance delta away (i).  Note
-    // those threads where the thread 'i' away would have
-    // been out of bounds of the warp are unaffected.  This
-    // creates the scan sum.
-#pragma unroll
-
-    for (int i=1; i<=width; i*=2)
-    {
-        int n = __shfl_up(value, i, width);
-
-        if (lane_id >= i) value += n;
-    }
-
-    // value now holds the scan value for the individual thread
-    // next sum the largest values for each warp
-
-    // write the sum of the warp to smem
-    if (threadIdx.x % warpSize == warpSize-1)
-    {
-        sums[warp_id] = value;
-    }
-
-    __syncthreads();
-
-    //
-    // scan sum the warp sums
-    // the same shfl scan operation, but performed on warp sums
-    //
-    if (warp_id == 0 && lane_id < (blockDim.x / warpSize))
-    {
-        int warp_sum = sums[lane_id];
-
-        for (int i=1; i<=width; i*=2)
-        {
-            int n = __shfl_up(warp_sum, i, width);
-
-            if (lane_id >= i) warp_sum += n;
-        }
-
-        sums[lane_id] = warp_sum;
-    }
-
-    __syncthreads();
-
-    // perform a uniform add across warps in the block
-    // read neighbouring warp's sum and add it to threads value
-    int blockSum = 0;
-
-    if (warp_id > 0)
-    {
-        blockSum = sums[warp_id-1];
-    }
-
-    value += blockSum;
-
-    // Now write out our result
-    data[id] = value;
-
-    // last thread has sum, write write out the block's sum
-    if (partial_sums != NULL && threadIdx.x == blockDim.x-1)
-    {
-        partial_sums[blockIdx.x] = value;
-    }
-}
-*/
 
 //list of obvious optimizations to make:
 /*
-    convert the histogram pooling and reorder pooling code to use thread strides, so as to enable coalesced mem accesses
+    [x]convert the histogram pooling and reorder pooling code to use thread strides, so as to enable coalesced mem accesses
     switch the prefix sum to a non-naive algorithm
     if possible, upgrade prefix sum to use shuffle warp instructions
-    for the histogram, because the expected size is at most 1024 bins, we should be able to get away with a shared mem histogram
+    [x]for the histogram, because the expected size is at most 1024 bins, we should be able to get away with a shared mem histogram
 */
 
 
@@ -288,7 +208,7 @@ __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits,
     int k = blockDim.x * blockIdx.x + threadIdx.x;
     for(; k < i_rh_size; k += gridDim.x * blockDim.x)
     {
-        int kval = i_r_h[k];
+        // int kval = i_r_h[k];
         int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
         int offset = atomicAdd(&i_prefix_sum[h],1);
         o_r_h[offset] = kval;
