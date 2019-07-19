@@ -186,7 +186,7 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     //first attempt at coalesced accesses
     extern __shared__ int sh_hist[];
     int kstart = blockDim.x * blockIdx.x + threadIdx.x;
-    for(int k = 0; k < histSize; k += blockDim.x)
+    for(int k = threadIdx.x; k < histSize; k += blockDim.x)
     {
         sh_hist[k] = 0;
     }
