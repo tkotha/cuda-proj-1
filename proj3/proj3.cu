@@ -149,6 +149,7 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 
 //define the histogram kernel here
 //kernel config based on r_h size
+/* old version
 __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
 {
     int k;
@@ -178,6 +179,18 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
             atomicAdd(&o_histogram[h], 1);
         }    
     }
+}
+*/
+__global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
+{
+    //first attempt at coalesced accesses
+    int k = blockDim.x * blockIdx.x + threadIdx.x;
+    for(; k < i_rh_size; k += gridDim.x * blockDim.x)
+    {
+        int h = bfe(i_rh_size[k], START_BIT_LOC, i_numbits);
+        atomicAdd(&o_histogram[h], 1);
+    }
+    
 }
 
 //notice how the num partitions will be the size of 2 to 1024... hmmm it seems they know arbitrary size prefix scan is tricky to get right
