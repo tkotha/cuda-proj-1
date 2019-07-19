@@ -149,7 +149,7 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 
 //define the histogram kernel here
 //kernel config based on r_h size
- old version
+ // old version
 __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram)
 {
     int k;
