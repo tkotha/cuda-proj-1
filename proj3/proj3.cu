@@ -197,7 +197,7 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     }
     for(int k = 0; k < histSize; k += blockDim.x)
     {
-        atomicAdd(&o_histogram[k], sh_hist[k]);
+        // atomicAdd(&o_histogram[k], sh_hist[k]);
     }
 }
 
