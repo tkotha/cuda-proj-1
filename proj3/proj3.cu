@@ -366,7 +366,7 @@ int main(int argc, char *argv[])
     printf("num bits:       %d\n", numbits);
 
 
-    histogram<<<blockcount, blocksize, sizeof(short)*numPartitions>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram, numPartitions);
+    histogram<<<blockcount, blocksize, sizeof(int)*numPartitions>>>(POOL_SIZE, r_h, rSize, numbits, h_histogram, numPartitions);
 
 #if ERROR_CHECK
     gpuErrchk( cudaPeekAtLastError() , "histogram1");
