@@ -193,7 +193,7 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     for(int k = kstart; k < i_rh_size; k += gridDim.x * blockDim.x)
     {
         int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
-        atomicAdd(&sh_hist[h], 1);
+        atomicAdd(&sh_hist[h], (short)1);
     }
     for(int k = 0; k < histSize; k += blockDim.x)
     {
