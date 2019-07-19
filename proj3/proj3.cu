@@ -130,8 +130,6 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
 //so it seems the width is based on numPartitions
 //remember that this is exclusive scan
 
-//bug: oddly enough, prefix scan fails at partition size 1024 only... i wonder why
-
 __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
 {
     extern __shared__ int temp[];
@@ -265,7 +263,7 @@ int main(int argc, char *argv[])
 
     //begin cuda kernel
     //for now, we use warp size 32
-    int blocksize = 32;
+    int blocksize = 64;
     int POOL_SIZE = 512;
     int blockcount;
     //only if we're dealing with really big numbers atm (or whatever threshold we set here), do we concern ourselves with pooling
