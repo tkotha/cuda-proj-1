@@ -112,7 +112,9 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     }
     for(int k = kstart; k < i_rh_size; k += gridDim.x * blockDim.x)
     {
-        int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
+        // int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
+        int h;
+        asm("bfe.u32 %0, %1, %2, %3;" : "=r"(h) : "r"(i_r_h[k]), "r"(START_BIT_LOC), "r"(i_numbits));
         atomicAdd(&sh_hist[h], 1);
     }
     for(int k = threadIdx.x; k < histSize; k += blockDim.x)
@@ -152,11 +154,9 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
             int lh = tid - offset;
             int rh = tid;
             if(lh > 0)
-                //temp[rh] += temp[lh];
-                atomicAdd(&temp[rh], temp[lh]); //this seems really stupid, but whatevs
+                atomicAdd(&temp[rh], temp[lh]); 
             else
-                // temp[rh] = temp[rh];
-                atomicAdd(&temp[rh], 0);        //ok now this is getting ridiculous
+                atomicAdd(&temp[rh], 0);
 
             __syncthreads();
         }
@@ -207,7 +207,9 @@ __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits,
     for(; k < i_rh_size; k += gridDim.x * blockDim.x)
     {
         int kval = i_r_h[k];
-        int h = bfe(kval, START_BIT_LOC, i_numbits);
+        // int h = bfe(kval, START_BIT_LOC, i_numbits);
+        int h;
+        asm("bfe.u32 %0, %1, %2, %3;" : "=r"(h) : "r"(kval), "r"(START_BIT_LOC), "r"(i_numbits));
         int offset = atomicAdd(&i_prefix_sum[h],1);
         o_r_h[offset] = kval;
     }
