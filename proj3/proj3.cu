@@ -367,6 +367,7 @@ int main(int argc, char *argv[])
     #endif
         currentSum += curval;
     }
+    printf("Final Value: %d\n", prefix_sum[numPartitions-1]);
     printf("\n");
 
 
