@@ -12,7 +12,7 @@
 #define RAND_RANGE(N) ((double)rand()/((double)RAND_MAX + 1)*(N))
 #define ARRAY_DEBUG 0
 #define PREFIX_DEBUG 0
-#define HIST_DEBUG 1
+#define HIST_DEBUG 0
 #define START_BIT_LOC 0
 #define ERROR_CHECK 1
 #define MAX_THREAD_COUNT 2097121
@@ -356,11 +356,15 @@ int main(int argc, char *argv[])
     for(int i = 0; i < numPartitions; i++)
     {
         int curval = h_histogram[i];
+    #if PREFIX_DEBUG
         printf("Partition %d:\n", i+1);
         printf("    Pointer offset(CPU)   :    %d\n", currentSum);
         printf("    Pointer offset(before):    %d\n", prefix_sum[i] - curval);
         printf("    Pointer offset(after) :    %d\n", prefix_sum[i]);
         printf("    Number of Keys: %d\n", curval);
+    #else
+        printf("Partition %d: offset %d, number of keys %d.\n", i+1, prefix_sum[i] - curval, curval);
+    #endif
         currentSum += curval;
     }
     printf("\n");
