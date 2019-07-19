@@ -184,7 +184,7 @@ __device__ uint bfe(uint x, uint start, uint nbits)
 __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits ,int* o_histogram, int histSize)
 {
     //first attempt at coalesced accesses
-    extern __shared__ short sh_hist[];
+    extern __shared__ int sh_hist[];
     int kstart = blockDim.x * blockIdx.x + threadIdx.x;
     for(int k = kstart; k < i_rh_size; k += gridDim.x * blockDim.x)
     {
@@ -193,7 +193,7 @@ __global__ void histogram(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbit
     for(int k = kstart; k < i_rh_size; k += gridDim.x * blockDim.x)
     {
         int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
-        atomicAdd(&sh_hist[h], (short)1);
+        atomicAdd(&sh_hist[h], 1);
     }
     for(int k = 0; k < histSize; k += blockDim.x)
     {
