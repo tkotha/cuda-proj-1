@@ -275,17 +275,17 @@ __global__ void prefixScan(int* i_histogram, int n, int* o_prefix_sum)
 //     }
 // }
 
-// __global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits, int* i_prefix_sum, int* o_r_h)
-// {
-//     int k = blockDim.x * blockIdx.x + threadIdx.x;
-//     for(; k < i_rh_size; k += gridDim.x * blockDim.x)
-//     {
-//         int kval = i_r_h[k];
-//         int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
-//         int offset = atomicAdd(&i_prefix_sum[h],1);
-//         o_r_h[offset] = kval;
-//     }
-// }
+__global__ void Reorder(int POOL_SIZE, int* i_r_h, int i_rh_size, int i_numbits, int* i_prefix_sum, int* o_r_h)
+{
+    int k = blockDim.x * blockIdx.x + threadIdx.x;
+    for(; k < i_rh_size; k += gridDim.x * blockDim.x)
+    {
+        int kval = i_r_h[k];
+        int h = bfe(i_r_h[k], START_BIT_LOC, i_numbits);
+        int offset = atomicAdd(&i_prefix_sum[h],1);
+        o_r_h[offset] = kval;
+    }
+}
 
 
 int isNumber(char * arg)
